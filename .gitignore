@@ -70,3 +70,6 @@ Thumbs.db
 slurm-*.out
 *.sbatch.log
 progress.md
+
+# ─── R2 credentials ─────────────────────────────────────────────
+.r2env
