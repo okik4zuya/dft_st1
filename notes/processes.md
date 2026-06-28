@@ -1,0 +1,70 @@
+root         344  0.0  0.0 523796 27972 pts/1    Sl+  02:01   0:00 mpirun --allow-run-as-root -np 64 pw.x -nk 8 -in SnO2_pristine.nscf.in
+root         352 99.9  0.0 558956 92196 pts/1    Rl   02:01  17:28 pw.x -nk 8 -in SnO2_pristine.nscf.in
+root         353 99.9  0.0 557116 87080 pts/1    Rl   02:01  17:28 pw.x -nk 8 -in SnO2_pristine.nscf.in
+root         354 99.9  0.0 561208 93064 pts/1    Rl   02:01  17:28 pw.x -nk 8 -in SnO2_pristine.nscf.in
+root         355 99.9  0.0 556880 86696 pts/1    Rl   02:01  17:28 pw.x -nk 8 -in SnO2_pristine.nscf.in
+root         356 99.9  0.0 556880 88900 pts/1    Rl   02:01  17:28 pw.x -nk 8 -in SnO2_pristine.nscf.in
+root         357 99.9  0.0 560952 90984 pts/1    Rl   02:01  17:28 pw.x -nk 8 -in SnO2_pristine.nscf.in
+root         358 99.9  0.0 556884 89412 pts/1    Rl   02:01  17:28 pw.x -nk 8 -in SnO2_pristine.nscf.in
+root         359 99.9  0.0 556980 86680 pts/1    Rl   02:01  17:28 pw.x -nk 8 -in SnO2_pristine.nscf.in
+root         360 99.9  0.0 557168 90644 pts/1    Rl   02:01  17:28 pw.x -nk 8 -in SnO2_pristine.nscf.in
+root         364 99.9  0.0 557116 87012 pts/1    Rl   02:01  17:28 pw.x -nk 8 -in SnO2_pristine.nscf.in
+root         366 99.9  0.0 557120 89176 pts/1    Rl   02:01  17:28 pw.x -nk 8 -in SnO2_pristine.nscf.in
+root         368 99.9  0.0 556940 86172 pts/1    Rl   02:01  17:28 pw.x -nk 8 -in SnO2_pristine.nscf.in
+root         369 99.9  0.0 558056 90448 pts/1    Rl   02:01  17:28 pw.x -nk 8 -in SnO2_pristine.nscf.in
+root         371 99.9  0.0 559096 91504 pts/1    Rl   02:01  17:28 pw.x -nk 8 -in SnO2_pristine.nscf.in
+root         377 99.9  0.0 556892 86452 pts/1    Rl   02:01  17:28 pw.x -nk 8 -in SnO2_pristine.nscf.in
+root         379 99.9  0.0 556980 86988 pts/1    Rl   02:01  17:28 pw.x -nk 8 -in SnO2_pristine.nscf.in
+root         380 99.9  0.0 557132 90476 pts/1    Rl   02:01  17:28 pw.x -nk 8 -in SnO2_pristine.nscf.in
+root         385 99.9  0.0 557116 86620 pts/1    Rl   02:01  17:28 pw.x -nk 8 -in SnO2_pristine.nscf.in
+root         387 99.9  0.0 557100 89144 pts/1    Rl   02:01  17:28 pw.x -nk 8 -in SnO2_pristine.nscf.in
+root         390 99.9  0.0 556880 86628 pts/1    Rl   02:01  17:28 pw.x -nk 8 -in SnO2_pristine.nscf.in
+root         393 99.9  0.0 559152 91704 pts/1    Rl   02:01  17:28 pw.x -nk 8 -in SnO2_pristine.nscf.in
+root         396 99.9  0.0 556796 86360 pts/1    Rl   02:01  17:28 pw.x -nk 8 -in SnO2_pristine.nscf.in
+root         399 99.9  0.0 556884 89616 pts/1    Rl   02:01  17:28 pw.x -nk 8 -in SnO2_pristine.nscf.in
+root         402 99.9  0.0 556980 86492 pts/1    Rl   02:01  17:28 pw.x -nk 8 -in SnO2_pristine.nscf.in
+root         407 99.9  0.0 555568 85264 pts/1    Rl   02:01  17:28 pw.x -nk 8 -in SnO2_pristine.nscf.in
+root         409 99.9  0.0 559824 93164 pts/1    Rl   02:01  17:28 pw.x -nk 8 -in SnO2_pristine.nscf.in
+root         412 99.9  0.0 559788 91704 pts/1    Rl   02:01  17:28 pw.x -nk 8 -in SnO2_pristine.nscf.in
+root         416 99.9  0.0 559576 89308 pts/1    Rl   02:01  17:28 pw.x -nk 8 -in SnO2_pristine.nscf.in
+root         420 99.9  0.0 559632 91344 pts/1    Rl   02:01  17:28 pw.x -nk 8 -in SnO2_pristine.nscf.in
+root         423 99.9  0.0 559544 89604 pts/1    Rl   02:01  17:28 pw.x -nk 8 -in SnO2_pristine.nscf.in
+root         425 99.9  0.0 557220 89612 pts/1    Rl   02:01  17:28 pw.x -nk 8 -in SnO2_pristine.nscf.in
+root         428 99.9  0.0 559624 89572 pts/1    Rl   02:01  17:28 pw.x -nk 8 -in SnO2_pristine.nscf.in
+root         431 99.9  0.0 555700 88768 pts/1    Rl   02:01  17:28 pw.x -nk 8 -in SnO2_pristine.nscf.in
+root         433 99.9  0.0 555588 85612 pts/1    Rl   02:01  17:28 pw.x -nk 8 -in SnO2_pristine.nscf.in
+root         436 99.9  0.0 559780 91952 pts/1    Rl   02:01  17:28 pw.x -nk 8 -in SnO2_pristine.nscf.in
+root         439 99.9  0.0 559572 89384 pts/1    Rl   02:01  17:28 pw.x -nk 8 -in SnO2_pristine.nscf.in
+root         442 99.9  0.0 559656 91828 pts/1    Rl   02:01  17:28 pw.x -nk 8 -in SnO2_pristine.nscf.in
+root         443 99.9  0.0 555340 85004 pts/1    Rl   02:01  17:28 pw.x -nk 8 -in SnO2_pristine.nscf.in
+root         446 99.9  0.0 559504 92408 pts/1    Rl   02:01  17:28 pw.x -nk 8 -in SnO2_pristine.nscf.in
+root         449 99.9  0.0 555516 85308 pts/1    Rl   02:01  17:28 pw.x -nk 8 -in SnO2_pristine.nscf.in
+root         453 99.9  0.0 559832 92876 pts/1    Rl   02:01  17:28 pw.x -nk 8 -in SnO2_pristine.nscf.in
+root         457 99.9  0.0 555616 85452 pts/1    Rl   02:01  17:28 pw.x -nk 8 -in SnO2_pristine.nscf.in
+root         460 99.9  0.0 558184 90320 pts/1    Rl   02:01  17:28 pw.x -nk 8 -in SnO2_pristine.nscf.in
+root         463 99.9  0.0 559568 89232 pts/1    Rl   02:01  17:28 pw.x -nk 8 -in SnO2_pristine.nscf.in
+root         466 99.9  0.0 559632 91732 pts/1    Rl   02:01  17:28 pw.x -nk 8 -in SnO2_pristine.nscf.in
+root         468 99.9  0.0 555404 85236 pts/1    Rl   02:01  17:28 pw.x -nk 8 -in SnO2_pristine.nscf.in
+root         471 99.9  0.0 559472 91608 pts/1    Rl   02:01  17:28 pw.x -nk 8 -in SnO2_pristine.nscf.in
+root         476 99.9  0.0 559620 89440 pts/1    Rl   02:01  17:28 pw.x -nk 8 -in SnO2_pristine.nscf.in
+root         480 99.9  0.0 555700 89104 pts/1    Rl   02:01  17:28 pw.x -nk 8 -in SnO2_pristine.nscf.in
+root         482 99.9  0.0 555608 85200 pts/1    Rl   02:01  17:28 pw.x -nk 8 -in SnO2_pristine.nscf.in
+root         486 99.9  0.0 555652 87720 pts/1    Rl   02:01  17:28 pw.x -nk 8 -in SnO2_pristine.nscf.in
+root         488 99.9  0.0 555388 85080 pts/1    Rl   02:01  17:28 pw.x -nk 8 -in SnO2_pristine.nscf.in
+root         491 99.9  0.0 559648 92352 pts/1    Rl   02:01  17:28 pw.x -nk 8 -in SnO2_pristine.nscf.in
+root         494 99.9  0.0 555424 84960 pts/1    Rl   02:01  17:28 pw.x -nk 8 -in SnO2_pristine.nscf.in
+root         495 99.9  0.0 559476 91984 pts/1    Rl   02:01  17:28 pw.x -nk 8 -in SnO2_pristine.nscf.in
+root         498 99.9  0.0 559620 89672 pts/1    Rl   02:01  17:28 pw.x -nk 8 -in SnO2_pristine.nscf.in
+root         499 99.9  0.0 555656 89136 pts/1    Rl   02:01  17:28 pw.x -nk 8 -in SnO2_pristine.nscf.in
+root         503 99.9  0.0 559780 89452 pts/1    Rl   02:01  17:28 pw.x -nk 8 -in SnO2_pristine.nscf.in
+root         508 99.9  0.0 559716 91868 pts/1    Rl   02:01  17:28 pw.x -nk 8 -in SnO2_pristine.nscf.in
+root         509 99.9  0.0 559568 89404 pts/1    Rl   02:01  17:28 pw.x -nk 8 -in SnO2_pristine.nscf.in
+root         512 99.9  0.0 558052 90356 pts/1    Rl   02:01  17:28 pw.x -nk 8 -in SnO2_pristine.nscf.in
+root         516 99.9  0.0 555444 84976 pts/1    Rl   02:01  17:28 pw.x -nk 8 -in SnO2_pristine.nscf.in
+root         519 99.9  0.0 555392 88048 pts/1    Rl   02:01  17:28 pw.x -nk 8 -in SnO2_pristine.nscf.in
+root         523 99.9  0.0 559628 89364 pts/1    Rl   02:01  17:28 pw.x -nk 8 -in SnO2_pristine.nscf.in
+root         546  0.0  0.0   3604  1548 pts/67   S+   02:18   0:00 grep --color=auto pw.x
+root@acefeb18ed8f:/quickpod/QE# grep pw.x
+
+root@acefeb18ed8f:/quickpod/QE# ps aux | grep pw.x | wc -l
+130

@@ -1,10 +1,8 @@
-﻿&CONTROL
-  calculation   = 'scf'
+&CONTROL
+  calculation   = 'nscf'
   prefix        = 'SnO2_pristine'
   outdir        = './tmp'
   pseudo_dir    = '../../pseudo'
-  tprnfor       = .true.
-  tstress       = .true.
 /
 
 &SYSTEM
@@ -13,25 +11,24 @@
   ntyp          = 2
   ecutwfc       = 60
   ecutrho       = 480
-  occupations   = 'smearing'
-  smearing      = 'mv'
-  degauss       = 0.01
+  nbnd          = 160            ! ~1.5x occupied (104); matches bands.in
+  occupations   = 'tetrahedra_opt'
+  nosym         = .true.         ! required for epsilon.x: full BZ k-point set
   nspin         = 1
 /
 
 &ELECTRONS
-  conv_thr         = 1.0e-8
-  mixing_beta      = 0.4
-  mixing_mode      = 'plain'
-  electron_maxstep = 200
+  conv_thr           = 1.0e-9
+  electron_maxstep   = 300
+  diagonalization    = 'cg'
+  diago_cg_maxiter   = 200
 /
 
 ATOMIC_SPECIES
   Sn  118.710  Sn.pbesol-dn-kjpaw_psl.1.0.0.UPF
   O   15.999   O.pbesol-n-kjpaw_psl.1.0.0.UPF
 
-! IMPORTANT: Replace CELL_PARAMETERS and ATOMIC_POSITIONS
-! with the relaxed coordinates from vc-relax output
+! Use relaxed coordinates from vc-relax
 CELL_PARAMETERS angstrom
      9.526314469   -0.000000406    0.000000000
     -0.000000406    9.526314469    0.000000000
@@ -69,4 +66,3 @@ K_POINTS automatic
 HUBBARD (ortho-atomic)
   U Sn-4d 4.0
   U O-2p  0.0
-  
