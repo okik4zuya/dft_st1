@@ -4,8 +4,8 @@
   filpdos         = 'SnO2_1to1_pdos'
   degauss         = 0.005
   DeltaE          = 0.01
-  Emin            = -10.0
-  Emax            =  10.0
+  Emin            = -25.0      ! eV; deep enough for O 2s reference (~VBM-18 eV)
+  Emax            =  20.0      ! eV; must exceed CBM for conduction PDOS
   lwrite_overlaps = .false.
   lbinary_data    = .false.
 /

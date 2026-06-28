@@ -205,32 +205,83 @@ mpirun -np 64 pp.x -pd .true. -in SnO2_pristine.pp.in > SnO2_pristine.pp.out
 
 ## Post-Processing Workflow
 
+Post-processing turns the **raw QE outputs** (one set per system, produced by
+`run.sh`) into the **5 manuscript figures**. It is not one script — it is three
+layers, and the confusing part is the middle layer, where two helper scripts
+distill the raw outputs into a few numbers that you then **paste by hand** into
+the figure scripts.
+
+### The three layers
+
+```text
+  LAYER A — raw QE outputs            LAYER B — extract & align         LAYER C — figures
+  (run.sh, per system)                (numbers you paste forward)       (postprocess/)
+
+  scf/*.scf.out      ─ Fermi, VBM ┐
+  bands/*_bands.dat  ─ band path  ├─►  extract_dft_values.py            fig1_bands_pdos.py
+  bands/*.bands.out  ─ CBM        │      └─ writes dft_extracted_       fig2_pdos_comparison.py
+  dos/*.pdos_atm*    ─ PDOS, O 1s ┘         values.txt (VBM/CBM/        fig3_delta_rho.py
+  pp/*_charge.cube   ─ charge density        O1s/Fermi per system)      fig4_optical_absorption.py
+  optical/epsilon_*.dat ─ ε(ω)            ▼                             fig5_energy_diagram.py
+                                       band_alignment.py                       ▲
+                                          └─ prints scissor shifts,      run_figures.py
+                                             CORE_SHIFT, ALIGNED_VBM ────┘  (runs all 5)
+```
+
+- **Layer A** is everything `run.sh` produces. Each figure needs only *some* of
+  these steps (see the table below) — you do **not** need the full pipeline to
+  make every figure.
+- **Layer B** are two scripts that read Layer A and emit *numbers*, not figures:
+  - `extract_dft_values.py` — greps VBM / CBM / O 1s / Fermi from the outputs
+    into `dft_extracted_values.txt` (and prints a dict to paste into the next
+    script). Currently all `None` because the calculations haven't been run yet.
+  - `band_alignment.py` — takes those numbers, does the O 1s core-level
+    alignment, and prints the **scissor shifts**, the fig2 `CORE_SHIFT` dict,
+    and the fig5 `ALIGNED_VBM` dict. It also emits the energy diagram itself.
+- **Layer C** are the 5 figure scripts. fig1 and fig3 read Layer A directly;
+  **fig2, fig4, fig5 need values from Layer B pasted in first** (that is the
+  manual step that makes this feel non-obvious).
+
+### Which figure needs which calculation step
+
+| Fig | Content | Calc steps required | Manual numbers to paste in first |
+| --- | --- | --- | --- |
+| **1** | Band structure + PDOS (1:1, 2:1) | `bands` + `dos` (+`scf` Fermi) | none — reads outputs directly |
+| **2** | Stacked PDOS, all 4 systems | `dos` (+`scf`) | `CORE_SHIFT` dict (from `band_alignment.py`) |
+| **3** | Δρ charge-density cube + slice | `pp` | none — subtracts the `.cube` files |
+| **4** | α(ω) + Tauc inset | `optical` (NC branch) | scissor `shift` set in each `epsilon.in` |
+| **5** | Band-alignment energy diagram | `scf` + `bands` + `dos` | `ALIGNED_VBM` dict (from `band_alignment.py`) |
+
+> **Stop after `dos` →** you can make **fig1, fig2, fig5** (fig2/fig5 after the
+> Layer-B paste step). **fig3** additionally needs `pp`; **fig4** needs the
+> `optical` step.
+
+### Order of operations
+
 ```bash
-# Step 1: extract VBM, CBM, Fermi, O 1s core levels from all QE outputs
-python3 extract_dft_values.py
+# 1. Extract numbers from the raw outputs (run from repo root)
+python3 extract_dft_values.py          # → dft_extracted_values.txt + printed dict
 
-# Step 2: copy printed values into band_alignment.py data section
-# Step 3: set DEMO_MODE = False in band_alignment.py
-python3 band_alignment.py      # → scissor shifts, ALIGNED_VBM, energy_diagram.png
+# 2. Paste that dict into band_alignment.py's data section, set DEMO_MODE = False,
+#    then run it. It prints scissor shifts + CORE_SHIFT + ALIGNED_VBM and draws fig5's diagram.
+python3 band_alignment.py
 
-# Step 4: fill epsilon.in (scissor shift), fig2 CORE_SHIFT dict, fig5 ALIGNED_VBM dict
-# Step 5: re-run epsilon.x with scissor corrections
+# 3a. (fig4 only) put each system's scissor `shift` into its optical/*.epsilon.in,
+#     then redo the optical step so ε(ω) reflects the corrected gap:
+cd pristine && bash run.sh optical && cd ..
+# 3b. (fig2) paste CORE_SHIFT dict into fig2_pdos_comparison.py
+# 3c. (fig5) paste ALIGNED_VBM dict into fig5_energy_diagram.py
 
-# Step 6: generate all 5 manuscript figures
+# 4. Generate all 5 figures (skips/uses demo data for any missing inputs)
 cd postprocess/ && python3 run_figures.py
 ```
 
-### Figures
-
-| Fig | Script | Content |
-|---|---|---|
-| 1 | fig1_bands_pdos.py | Band structure + PDOS (1:1 and 2:1 SnO₂) |
-| 2 | fig2_pdos_comparison.py | Stacked PDOS all 4 systems |
-| 3 | fig3_delta_rho.py | Δρ cube + 2D slice |
-| 4 | fig4_optical_absorption.py | α(ω) + Tauc inset |
-| 5 | fig5_energy_diagram.py | Band alignment → Type-II/Z/S-scheme |
-
-All scripts fall back to demo data if QE outputs are absent.
+> **Demo-data caveat:** every `figN_*.py` (and `band_alignment.py` via
+> `DEMO_MODE`) falls back to **synthetic placeholder data** when its QE inputs
+> are missing, so a script "succeeding" does **not** mean the figure is real.
+> A real figure requires both (a) the calculation steps in the table above and
+> (b) the manual paste steps for fig2/4/5. Check the script's stdout — it warns
+> when it used demo data.
 
 ---
 

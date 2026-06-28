@@ -148,22 +148,29 @@ def _parse_eigenvalues(content):
             # else: leading blank line(s) before the data — keep skipping
     return eigs
 
-def extract_o1s_corelevel(pdos_glob):
+def extract_o2s_reference(pdos_glob, fermi=None, deep_below_fermi=12.0):
     """
-    Extract O 1s core level peak position from PDOS files.
-    O 1s is the first s-channel of O atoms.
-    It appears as a sharp peak at very low energy (~-15 to -20 eV below VBM).
+    Extract the deep O 2s peak position used as the internal alignment reference.
+
+    NOTE ON NAMING: this is labelled "O 1s" elsewhere for historical reasons, but
+    in a pseudopotential calculation the true O 1s is frozen in the core and never
+    appears in the PDOS. The deepest O s-channel state present is O 2s (~18 eV
+    below the VBM), a rigid, atomic-like level — a valid common reference for
+    MacFarlane-style core-level band alignment.
+
+    projwfc writes PDOS on the ABSOLUTE eV scale (same zero as the eigenvalues),
+    so the O 2s peak sits near `E_Fermi - 19 eV`, NOT near -19 eV. We therefore
+    locate it relative to the Fermi level (`energy - fermi < -deep_below_fermi`)
+    and return its ABSOLUTE position, consistent with VBM_DFT / CBM_DFT.
     """
     files = glob.glob(pdos_glob)
     if not files:
         print(f"  WARNING: No PDOS files found matching {pdos_glob}")
         return None
 
-    # Aggregate all O s-channel PDOS files
-    all_energy  = None
-    all_dos_up  = None
-    all_dos_dn  = None
-
+    # Aggregate all O s-channel PDOS files onto a common energy grid
+    all_energy = None
+    total_dos  = None
     for f in files:
         try:
             raw = np.loadtxt(f, comments='#')
@@ -179,28 +186,33 @@ def extract_o1s_corelevel(pdos_glob):
 
             if all_energy is None:
                 all_energy = energy
-                total_dos  = dos
-            else:
-                if len(dos) == len(total_dos):
-                    total_dos += dos
+                total_dos  = dos.copy()
+            elif len(dos) == len(total_dos):
+                total_dos += dos
 
         except Exception as e:
             print(f"  WARNING: Could not read {f}: {e}")
             continue
 
-    if all_energy is None:
+    if all_energy is None or total_dos is None:
         return None
 
-    # O 1s is the sharp peak at most negative energy
-    # Restrict search to region below -10 eV
-    mask = all_energy < -10.0
-    if not np.any(mask):
-        print("  WARNING: No states found below -10 eV; check energy window in pdos.in")
+    # Locate the deep O 2s peak. Reference to the Fermi level when available,
+    # since projwfc energies are absolute; otherwise fall back to the raw axis.
+    if fermi is not None:
+        deep = all_energy < (fermi - deep_below_fermi)
+        where = f"{deep_below_fermi:.0f} eV below E_Fermi ({fermi:.3f} eV)"
+    else:
+        deep = all_energy < -deep_below_fermi
+        where = f"below -{deep_below_fermi:.0f} eV (no Fermi level given)"
+
+    if not np.any(deep):
+        print(f"  WARNING: no O s-states found {where}; "
+              f"check Emin in pdos.in (needs ~-25 eV) and that projwfc ran")
         return None
 
-    idx_peak = np.argmax(total_dos[mask])
-    E_o1s    = all_energy[mask][idx_peak]
-    return E_o1s
+    idx_peak = np.argmax(total_dos[deep])
+    return float(all_energy[deep][idx_peak])
 
 # =============================================================================
 # MAIN EXTRACTION
@@ -221,6 +233,7 @@ def extract_all():
 
         # SCF output
         scf_path = os.path.join(BASE_DIR, cfg['scf_out'])
+        E_F = None
         if os.path.exists(scf_path):
             VBM, CBM = extract_vbm_cbm(scf_path, system_name=sys)
             E_F      = extract_fermi(scf_path)
@@ -238,11 +251,12 @@ def extract_all():
             result['VBM_DFT'] = None
             result['CBM_DFT'] = None
 
-        # PDOS — O 1s core level
+        # PDOS — deep O 2s alignment reference (labelled "O1s_DFT" for the
+        # downstream band_alignment.py data dict; see extract_o2s_reference).
         pdos_path = os.path.join(BASE_DIR, cfg['pdos_glob'])
-        O1s = extract_o1s_corelevel(pdos_path)
-        result['O1s_DFT'] = O1s
-        print(f"  O 1s core level    : {O1s}")
+        O2s = extract_o2s_reference(pdos_path, fermi=E_F)
+        result['O1s_DFT'] = O2s
+        print(f"  O 2s reference (eV): {O2s}")
 
         extracted[sys] = result
         print()
