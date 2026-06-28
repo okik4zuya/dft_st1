@@ -121,11 +121,11 @@ NK_BANDS=${NK_BANDS:-$(largest_divisor_leq "$MPI_NPROC" $(( MPI_NPROC / 16 )) )}
 PW_SCF="${MPI} pw.x -nk ${NK_PW}"      # SCF / vc-relax
 PW_NSCF="${MPI} pw.x -nk ${NK_PW}"     # NSCF (dense mesh, same pools)
 PW_BANDS="${MPI} pw.x -nk ${NK_BANDS}" # band path (more ranks/pool for CG FFT)
-DOS="${MPI} dos.x"
-PROJWFC="${MPI} projwfc.x"
-BANDS="${MPI} bands.x"
-EPSILON="${MPI} epsilon.x"
-PP="${MPI} pp.x"
+DOS="${MPI} dos.x -pd .true."
+PROJWFC="${MPI} projwfc.x -pd .true."
+BANDS="${MPI} bands.x -pd .true."
+EPSILON="${MPI} epsilon.x -pd .true."
+PP="${MPI} pp.x -pd .true."
 
 ROOT_DIR="$(pwd)"
 PROGRESS_FILE="${ROOT_DIR}/progress.md"
