@@ -28,6 +28,7 @@ QE/
 │   └── Ti.pbesol-spn-kjpaw_psl.1.0.0.UPF
 │
 ├── pristine/
+│   ├── run.sh   ← per-system runner (no relax.out needed for post steps)
 │   ├── relax/   SnO2_pristine.relax.in
 │   ├── scf/     SnO2_pristine.scf.in
 │   ├── nscf/    SnO2_pristine.nscf.in
@@ -37,6 +38,7 @@ QE/
 │   └── pp/      SnO2_pristine.pp.in
 │
 ├── ratio_1to1/                      ← 2 Vo, 12.50%, Eg=2.41 eV (nspin=2)
+│   ├── run.sh
 │   ├── relax/   SnO2_1to1.relax.in
 │   ├── scf/     SnO2_1to1.scf.in + scf_unrelaxed/  (distortion isolation)
 │   ├── nscf/    SnO2_1to1.nscf.in
@@ -46,9 +48,11 @@ QE/
 │   └── pp/      SnO2_1to1.pp.in
 │
 ├── ratio_2to1/                      ← 3 Vo, 18.75%, Eg=2.21 eV (nspin=2)
+│   ├── run.sh
 │   └── [same layout as ratio_1to1]
 │
 ├── TiO2/                            ← pristine rutile TiO₂, U(Ti-3d)=4.2 eV
+│   ├── run.sh
 │   └── [same layout as pristine/]
 │
 ├── postprocess/
@@ -59,53 +63,65 @@ QE/
 │   ├── fig4_optical_absorption.py
 │   └── fig5_energy_diagram.py
 │
-├── run_all.sh                       ← master run script (two-phase, auto-scaling)
-├── update_geometry.py               ← auto-injects relaxed coords into scf/nscf/bands
+├── run_all.sh                       ← multi-system orchestrator (all systems at once)
+├── run_lib.sh                       ← shared functions sourced by run_all.sh and run.sh
+├── update_geometry.py               ← injects relaxed coords into scf/nscf/bands inputs
 ├── extract_dft_values.py            ← extracts VBM/CBM/O1s/Fermi from QE outputs
 ├── band_alignment.py                ← O 1s core-level alignment → energy diagram
 ├── check_magnetization.py           ← verify spin ansatz in doped cells
 ├── distortion_analysis.py           ← isolate distortion vs electronic gap contribution
-└── progress.md                      ← timestamped run log (auto-written by run_all.sh)
+└── progress.md                      ← timestamped run log (auto-written by scripts)
 ```
 
 ---
 
 ## Running Calculations
 
-### Quick start (recommended)
+### Per-system scripts (recommended)
+
+Each system folder has its own `run.sh`. Geometry injection is **not** a prerequisite
+— run post steps directly against whatever coordinates are already in the input files.
 
 ```bash
-# Phase 1: relaxation only — stops after injecting relaxed geometry for review
-bash run_all.sh relax
+# From inside any system folder:
+bash run.sh            # full post pipeline: scf → nscf → bands → dos → optical → pp
+bash run.sh scf        # SCF only
+bash run.sh nscf       # NSCF only
+bash run.sh bands      # band structure only
+bash run.sh dos        # DOS + PDOS only
+bash run.sh optical    # epsilon.x only
+bash run.sh pp         # charge density only
 
-# Review the injected coordinates, then run the rest
-bash run_all.sh post
-
-# OR run everything end-to-end in one shot
-bash run_all.sh
+# Relaxation and geometry injection (explicit):
+bash run.sh relax      # vc-relax + auto-inject relaxed coords into scf/nscf/bands
+bash run.sh inject     # inject only (from an existing relax.out)
 ```
 
-The script is **idempotent**: re-running it resumes from the first incomplete step (checks for `JOB DONE` in output files). Safe to stop and restart at any point.
+Scripts are **idempotent**: each step checks for `JOB DONE` in the output file and
+skips if already complete. Safe to stop and restart at any point.
 
-### Per-system override
+### Multi-system orchestration (`run_all.sh`)
 
 ```bash
-bash run_all.sh relax pristine         # relax only, pristine system
-bash run_all.sh post  ratio_1to1       # post only, 1:1 system
-bash run_all.sh all   ratio_2to1       # full chain, 2:1 system
+bash run_all.sh relax           # vc-relax + inject, all 4 systems, then STOP for review
+bash run_all.sh post            # scf → pp, all 4 systems (no injection)
+bash run_all.sh                 # full pipeline (relax + inject + post), all systems
+
+bash run_all.sh relax pristine  # relax only, one system
+bash run_all.sh post  ratio_1to1
 ```
 
-### Resource overrides
+### Resource overrides (both scripts)
 
 ```bash
-NPROC=4            bash run_all.sh post   # force 4 ranks (laptop)
-OMP_NUM_THREADS=2  bash run_all.sh post   # 32 MPI × 2 OMP hybrid
+NPROC=4             bash run.sh           # force 4 ranks (laptop)
+OMP_NUM_THREADS=2   bash run.sh post      # hybrid: 32 MPI × 2 OMP
 MEM_PER_RANK_MB=500 bash run_all.sh       # tighter RAM guard (larger cells)
-NK_PW=4 NK_BANDS=2 bash run_all.sh       # manual k-pool pin
+NK_PW=4 NK_BANDS=2  bash run_all.sh       # manual k-pool pin
 ```
 
-The script auto-detects physical cores (not SMT threads), guards against OOM by
-capping ranks at `AvailMem / MEM_PER_RANK_MB` (default 300 MB), and picks the
+Both scripts auto-detect physical cores (not SMT threads), guard against OOM by
+capping ranks at `AvailMem / MEM_PER_RANK_MB` (default 300 MB), and pick the
 largest valid `npool` divisor automatically.
 
 ---
@@ -328,8 +344,9 @@ Post-processing tools (`dos.x`, `projwfc.x`, `bands.x`, `epsilon.x`, `pp.x`) cra
 with `fft_type_set (6): there are processes with no planes` when MPI ranks > FFT
 z-planes. This cell has 45 z-planes; running 64 MPI ranks triggers it.
 
-**Fix:** `-pd .true.` is pre-set in `run_all.sh` for all post-processing tools.
-If you run manually, always add `-pd .true.` to these programs.
+**Fix:** `-pd .true.` is pre-set in `run_lib.sh` for all post-processing tools
+(used by both `run.sh` and `run_all.sh`). If you run manually, always add
+`-pd .true.` to these programs.
 
 ### NSCF Cholesky crash (`diagonalization='cg'` required)
 
@@ -350,7 +367,7 @@ rm -rf tmp && ln -sfn ../nscf/tmp tmp  # dos / optical
 ```
 
 `mkdir -p tmp && ln -sfn ../scf/tmp/. tmp/` creates a real dir and breaks the link.
-`run_all.sh` handles this correctly; only relevant for manual runs.
+`run_lib.sh` handles this correctly in both `run.sh` and `run_all.sh`; only relevant for manual runs.
 
 ---
 
