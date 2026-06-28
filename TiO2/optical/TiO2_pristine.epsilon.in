@@ -1,0 +1,17 @@
+&inputepsilon
+  prefix        = 'TiO2_pristine'
+  outdir        = './tmp'
+  calculation   = 'eps'
+  smeartype     = 'gauss'
+  intersmear    = 0.1
+  wmin          = 0.0
+  wmax          = 6.0
+  nw            = 1000
+  shift         = 0.0          ! FILL IN: shift = 3.00 - Eg_PBE+U(TiO2)
+                               ! Experimental Eg of rutile TiO2 = ~3.0 eV
+                               ! e.g. if Eg_PBE+U = 2.1 eV, set shift = 0.90
+/
+
+! TARGET: Absorption onset at 3.0 eV (413 nm, UV region)
+! This will appear as the leftmost curve in your alpha(omega) comparison plot
+! All SnO2-x curves should show red-shifted onset relative to TiO2

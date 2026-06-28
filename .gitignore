@@ -37,7 +37,7 @@ data-file*.xml
 *.dos
 *.eps_*
 *.epsr*
-*.epsi*
+#*.epsi*
 
 # Generated figures
 *.png

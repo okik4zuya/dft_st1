@@ -1,0 +1,21 @@
+&inputepsilon
+  prefix        = 'SnO2_pristine'
+  outdir        = './tmp'
+  calculation   = 'eps'
+  smeartype     = 'gauss'
+  intersmear    = 0.1          ! eV — Gaussian broadening; match to experiment
+  wmin          = 0.0          ! eV — min photon energy
+  wmax          = 6.0          ! eV — max photon energy (> Eg ~3.6 eV)
+  nw            = 1000         ! number of energy grid points
+  shift         = 0.0          ! scissor shift (eV)
+                               ! After SCF: shift = 3.60 - Eg_PBE+U_pristine
+/
+
+! Output files:
+!   epsilon_re.dat  -> real part of dielectric function eps1(omega)
+!   epsilon_im.dat  -> imaginary part eps2(omega)
+!
+! Compute absorption coefficient:
+!   alpha(omega) = (sqrt(2)*omega/c) * sqrt(sqrt(eps1^2+eps2^2) - eps1)
+!
+! Use provided Python post-processing script to generate alpha(omega) plot

@@ -1,0 +1,18 @@
+&inputepsilon
+  prefix        = 'SnO2_2to1'
+  outdir        = './tmp'
+  calculation   = 'eps'
+  smeartype     = 'gauss'
+  intersmear    = 0.1
+  wmin          = 0.0
+  wmax          = 6.0
+  nw            = 1000
+  shift         = 0.0          ! FILL IN: shift = 2.21 - Eg_PBE+U(2to1)
+                               ! e.g. if Eg_PBE+U = 1.46 eV, set shift = 0.75
+/
+
+! TARGET: Absorption onset must appear at 2.21 eV (561 nm) after scissor shift
+! Experimental reference: Kubelka-Munk band gap = 2.21 eV (2:1 sample)
+!
+! The onset should be RED-SHIFTED relative to 1:1 sample (2.41 eV)
+! This red-shift is the key optical signature of higher Vo concentration

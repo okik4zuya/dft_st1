@@ -97,15 +97,23 @@ largest_divisor_leq() {   # echo largest d with d|n and 1<=d<=cap
 NK_PW=${NK_PW:-$(largest_divisor_leq "$MPI_NPROC" $(( MPI_NPROC / 8 )) )}
 NK_BANDS=${NK_BANDS:-$(largest_divisor_leq "$MPI_NPROC" $(( MPI_NPROC / 16 )) )}
 
+# Post-processing rank cap: dos.x/projwfc.x/epsilon.x/pp.x call read_file_new_
+# using slab decomp BEFORE -pd .true. takes effect.  If MPI ranks > smooth-grid
+# Nz (= 30 for this system's 90x90x30 mesh), ranks with no z-planes get null
+# array slices -> SIGBUS in read_file_new_.  Cap at POST_MAX_RANKS (default 16).
+POST_MAX_RANKS=${POST_MAX_RANKS:-$(( MPI_NPROC < 16 ? MPI_NPROC : 16 ))}
+MPI_POST="${MPI_LAUNCH} -np ${POST_MAX_RANKS}"
+[ "${SERIAL}" = "1" ] && MPI_POST=""
+
 # 5) Command assembly
 PW_SCF="${MPI} pw.x -nk ${NK_PW}"      # SCF / vc-relax
 PW_NSCF="${MPI} pw.x -nk ${NK_PW}"     # NSCF (dense mesh)
 PW_BANDS="${MPI} pw.x -nk ${NK_BANDS}" # band path (more ranks/pool for CG FFT)
-DOS="${MPI} dos.x -pd .true."
-PROJWFC="${MPI} projwfc.x -pd .true."
-BANDS="${MPI} bands.x -pd .true."
-EPSILON="${MPI} epsilon.x -pd .true."
-PP="${MPI} pp.x -pd .true."
+DOS="${MPI_POST} dos.x -pd .true."
+PROJWFC="${MPI_POST} projwfc.x -pd .true."
+BANDS="${MPI_POST} bands.x -pd .true."
+EPSILON="${MPI_POST} epsilon.x -pd .true."
+PP="${MPI_POST} pp.x -pd .true."
 
 # --- Preflight ---------------------------------------------------------------
 preflight() {
@@ -126,7 +134,7 @@ preflight() {
     if [ "$SERIAL" = "1" ]; then
         info "Resources: SERIAL (no mpirun) | 1 rank | NK_PW=${NK_PW} NK_BANDS=${NK_BANDS}"
     else
-        info "Resources: ${MPI_NPROC} MPI ranks × OMP=${OMP_NUM_THREADS} | NK_PW=${NK_PW} ($(( MPI_NPROC / NK_PW )) ranks/pool) | NK_BANDS=${NK_BANDS} ($(( MPI_NPROC / NK_BANDS )) ranks/pool)"
+        info "Resources: ${MPI_NPROC} MPI ranks × OMP=${OMP_NUM_THREADS} | NK_PW=${NK_PW} ($(( MPI_NPROC / NK_PW )) ranks/pool) | NK_BANDS=${NK_BANDS} ($(( MPI_NPROC / NK_BANDS )) ranks/pool) | POST=${POST_MAX_RANKS}"
     fi
 }
 
