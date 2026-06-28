@@ -9,7 +9,7 @@
 #   bash run.sh nscf       -> NSCF only
 #   bash run.sh bands      -> band structure only
 #   bash run.sh dos        -> DOS + PDOS only
-#   bash run.sh optical    -> epsilon.x only
+#   bash run.sh optical    -> NC-pseudo SCF -> NSCF -> epsilon.x (needs pseudo_nc/)
 #   bash run.sh pp         -> charge density (pp.x) only
 #   bash run.sh post       -> scf -> nscf -> bands -> dos -> optical -> pp (same as no arg)
 

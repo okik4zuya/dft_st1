@@ -115,6 +115,37 @@ BANDS="${MPI_POST} bands.x -pd .true."
 EPSILON="${MPI_POST} epsilon.x -pd .true."
 PP="${MPI_POST} pp.x -pd .true."
 
+# --- NC optical branch config ------------------------------------------------
+# epsilon.x supports ONLY norm-conserving pseudos, so the optical step runs its
+# own SCF -> NSCF with NC pseudos (from pseudo_nc/) on the relaxed geometry,
+# then epsilon.x. Override any of these from the environment if your NC pseudo
+# filenames or cutoffs differ.
+NC_PSEUDO_DIR_NAME=${NC_PSEUDO_DIR_NAME:-pseudo_nc}   # under ROOT_DIR
+NC_MAP=${NC_MAP:-"Sn=Sn.upf,O=O.upf,Ti=Ti.upf"}        # El=file.upf,...
+NC_ECUTWFC=${NC_ECUTWFC:-80}                            # Ry; NC needs more than PAW
+NC_ECUTRHO=${NC_ECUTRHO:-320}                           # Ry; 4x ecutwfc for NC
+NC_GEN="${ROOT_DIR}/make_nc_optical.py"
+
+# Verify the NC pseudos named in NC_MAP exist for the elements this system uses.
+# $1 = system input file whose ATOMIC_SPECIES lists the needed elements.
+check_nc_pseudos() {
+    local probe=$1 missing=0 pdir="${ROOT_DIR}/${NC_PSEUDO_DIR_NAME}"
+    local pair el fn
+    for pair in ${NC_MAP//,/ }; do
+        el=${pair%%=*}; fn=${pair#*=}
+        # only require the pseudo if this system actually uses the element
+        grep -qiE "^\s*${el}\s+[0-9]" "$probe" 2>/dev/null || continue
+        [ -f "${pdir}/${fn}" ] || { warn "missing NC pseudo: ${NC_PSEUDO_DIR_NAME}/${fn} (element ${el})"; missing=1; }
+    done
+    if [ "$missing" -ne 0 ]; then
+        err "Norm-conserving pseudos required for epsilon.x are missing under ${pdir}/."
+        err "  epsilon.x cannot use the PAW pseudos. See ${NC_PSEUDO_DIR_NAME}/README.md"
+        err "  for where to download them (Pseudo Dojo, PBEsol, SR, standard, UPF)."
+        return 1
+    fi
+    return 0
+}
+
 # --- Preflight ---------------------------------------------------------------
 preflight() {
     if ! command -v pw.x >/dev/null 2>&1; then
@@ -272,13 +303,56 @@ run_dos() {
 
 run_optical() {
     local SYS=$1 PREFIX=$2
-    info "[${SYS}] Optical absorption (epsilon.x)..."
+    info "[${SYS}] Optical absorption (NC SCF -> NSCF -> epsilon.x)..."
     warn "[${SYS}] If not yet set: check scissor shift in ${SYS}/optical/${PREFIX}.epsilon.in"
-    cd "${ROOT_DIR}/${SYS}/optical"
-    rm -rf tmp 2>/dev/null || true
-    ln -sfn ../nscf/tmp tmp
+
+    local odir="${ROOT_DIR}/${SYS}/optical"
+    local scf_src="${ROOT_DIR}/${SYS}/scf/${PREFIX}.scf.in"
+    local nscf_src="${ROOT_DIR}/${SYS}/nscf/${PREFIX}.nscf.in"
+
+    # epsilon.x needs NC pseudos; the PAW scf/nscf .save cannot be reused.
+    check_nc_pseudos "$scf_src" || { log_progress "$SYS" "Optical" "FAILED (NC pseudos missing)"; exit 1; }
+
+    cd "${odir}"
+
+    # Regenerate NC inputs from the current (relaxed) scf/nscf so geometry,
+    # HUBBARD and k-mesh always stay in sync with the rest of the study.
+    "${PYTHON}" "${NC_GEN}" --in "${scf_src}"  --out "${PREFIX}.opt_scf.in" \
+        --pseudo-dir "../../${NC_PSEUDO_DIR_NAME}" --map "${NC_MAP}" \
+        --ecutwfc "${NC_ECUTWFC}" --ecutrho "${NC_ECUTRHO}" \
+        || { err "[${SYS}] NC opt_scf generation failed"; exit 1; }
+    "${PYTHON}" "${NC_GEN}" --in "${nscf_src}" --out "${PREFIX}.opt_nscf.in" \
+        --pseudo-dir "../../${NC_PSEUDO_DIR_NAME}" --map "${NC_MAP}" \
+        --ecutwfc "${NC_ECUTWFC}" --ecutrho "${NC_ECUTRHO}" \
+        || { err "[${SYS}] NC opt_nscf generation failed"; exit 1; }
+
+    # Own real tmp for the NC .save (drop any stale symlink to ../nscf/tmp).
+    [ -L tmp ] && rm -f tmp
+    mkdir -p tmp
+
+    # NC SCF
+    if step_done "${PREFIX}.opt_scf.out"; then
+        info "[${SYS}] NC optical SCF already done, skipping."
+        log_progress "$SYS" "Optical-NCscf" "SKIPPED (already done)"
+    else
+        $PW_SCF -in ${PREFIX}.opt_scf.in > ${PREFIX}.opt_scf.out 2>&1 \
+            && { info "[${SYS}] NC optical SCF DONE"; log_progress "$SYS" "Optical-NCscf" "DONE"; } \
+            || { log_progress "$SYS" "Optical-NCscf" "FAILED"; err "NC optical SCF failed for ${SYS}"; exit 1; }
+    fi
+
+    # NC NSCF (same tmp; full BZ, tetrahedra_opt, nosym — required by epsilon.x)
+    if step_done "${PREFIX}.opt_nscf.out"; then
+        info "[${SYS}] NC optical NSCF already done, skipping."
+        log_progress "$SYS" "Optical-NCnscf" "SKIPPED (already done)"
+    else
+        $PW_NSCF -in ${PREFIX}.opt_nscf.in > ${PREFIX}.opt_nscf.out 2>&1 \
+            && { info "[${SYS}] NC optical NSCF DONE"; log_progress "$SYS" "Optical-NCnscf" "DONE"; } \
+            || { log_progress "$SYS" "Optical-NCnscf" "FAILED"; err "NC optical NSCF failed for ${SYS}"; exit 1; }
+    fi
+
+    # epsilon.x (reads NC .save from ./tmp)
     if step_done "${PREFIX}.epsilon.out"; then
-        info "[${SYS}] Optical already done, skipping."
+        info "[${SYS}] Optical (epsilon.x) already done, skipping."
         log_progress "$SYS" "Optical" "SKIPPED (already done)"
     else
         $EPSILON -in ${PREFIX}.epsilon.in > ${PREFIX}.epsilon.out 2>&1 \
