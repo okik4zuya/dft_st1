@@ -1,8 +1,10 @@
 ﻿&CONTROL
-  calculation   = 'nscf'
+  calculation   = 'scf'
   prefix        = 'SnO2_pristine'
   outdir        = './tmp'
   pseudo_dir    = '../../pseudo'
+  tprnfor       = .true.
+  tstress       = .true.
 /
 
 &SYSTEM
@@ -11,62 +13,58 @@
   ntyp          = 2
   ecutwfc       = 60
   ecutrho       = 480
-  nbnd          = 160          ! ~2.5x occupied bands; pristine has ~64 occ bands
-  occupations   = 'tetrahedra_opt'
+  occupations   = 'smearing'
+  smearing      = 'mv'
+  degauss       = 0.01
   nspin         = 1
 /
 
 &ELECTRONS
-  conv_thr           = 1.0e-9    ! plenty for nscf DOS; 1e-10 left the top
-                                 ! empty bands unconverged under cg
-  electron_maxstep   = 300
-  diagonalization    = 'cg'      ! Davidson 'cdiaghg (227): problems computing
-                                 ! cholesky' on the band step; cg has no global
-                                 ! overlap Cholesky and is robust to the many
-                                 ! random empty bands (nbnd 160 > 136 atomic wfcs)
-  diago_cg_maxiter   = 200       ! default 20 -> 'eigenvalues not converged' on
-                                 ! the high empty bands; give cg room
+  conv_thr         = 1.0e-8
+  mixing_beta      = 0.4
+  mixing_mode      = 'plain'
+  electron_maxstep = 200
 /
 
 ATOMIC_SPECIES
   Sn  118.710  Sn.pbesol-dn-kjpaw_psl.1.0.0.UPF
   O   15.999   O.pbesol-n-kjpaw_psl.1.0.0.UPF
 
-! Use relaxed coordinates from vc-relax
+! IMPORTANT: Replace CELL_PARAMETERS and ATOMIC_POSITIONS
+! with the relaxed coordinates from vc-relax output
 CELL_PARAMETERS angstrom
-  9.474000   0.000000   0.000000
-  0.000000   9.474000   0.000000
-  0.000000   0.000000   3.186000
+     9.526314469   -0.000000406    0.000000000
+    -0.000000406    9.526314469    0.000000000
+     0.000000000    0.000000000    3.217793281
 
 ATOMIC_POSITIONS angstrom
-  Sn   0.000000   0.000000   0.000000
-  Sn   2.368500   2.368500   1.593000
-  Sn   4.737000   0.000000   0.000000
-  Sn   7.105500   2.368500   1.593000
-  Sn   0.000000   4.737000   0.000000
-  Sn   2.368500   7.105500   1.593000
-  Sn   4.737000   4.737000   0.000000
-  Sn   7.105500   7.105500   1.593000
-  O    1.454259   1.454259   0.000000
-  O    7.919741   7.919741   0.000000
-  O    0.914241   3.282759   1.593000
-  O    3.282759   0.914241   1.593000
-  O    6.191259   1.454259   0.000000
-  O    3.822741   3.822741   0.000000
-  O    5.651241   0.914241   1.593000
-  O    8.019759   3.282759   1.593000
-  O    1.454259   6.191259   0.000000
-  O    3.822741   8.559741   0.000000
-  O    0.914241   7.651241   1.593000
-  O    3.282759   5.282759   1.593000
-  O    6.191259   6.191259   0.000000
-  O    8.559741   8.559741   0.000000
-  O    5.651241   5.651241   1.593000
-  O    8.019759   8.019759   1.593000
+  Sn     0.000000000    0.000000000    0.000000000
+  Sn     2.381576843    2.381576843    1.608896641
+  Sn     4.763157235   -0.000000203   -0.000000000
+  Sn     7.144736676    2.381577387    1.608896641
+  Sn    -0.000000203    4.763157235    0.000000000
+  Sn     2.381577387    7.144736676    1.608896641
+  Sn     4.763157032    4.763157032    0.000000000
+  Sn     7.144737220    7.144737220    1.608896641
+  O      1.458514617    1.458514617    0.000000000
+  O      3.304639854    3.304639854    0.000000000
+  O      3.840094116    0.923061891    1.608896641
+  O      0.923061891    3.840094116    1.608896641
+  O      6.221674084    1.458514843   -0.000000000
+  O      8.067799221    3.304639980   -0.000000000
+  O      8.603252237    0.923061826    1.608896641
+  O      5.686220175    3.840093888    1.608896641
+  O      1.458514843    6.221674084   -0.000000000
+  O      3.304639980    8.067799221   -0.000000000
+  O      3.840093888    5.686220175    1.608896641
+  O      0.923061826    8.603252237    1.608896641
+  O      6.221674210    6.221674210    0.000000000
+  O      8.067799447    8.067799447    0.000000000
+  O      8.603252173    5.686219948    1.608896641
+  O      5.686219948    8.603252173    1.608896641
 
-! 2x denser than SCF k-mesh for smooth DOS
 K_POINTS automatic
-  8 8 12  0 0 0
+  4 4 8  0 0 0
 
 HUBBARD (ortho-atomic)
   U Sn-4d 4.0
