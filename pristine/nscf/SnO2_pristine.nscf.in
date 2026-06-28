@@ -17,12 +17,15 @@
 /
 
 &ELECTRONS
-  conv_thr         = 1.0e-10   ! tighter for NSCF
-  electron_maxstep = 300
-  diagonalization  = 'cg'      ! Davidson 'cdiaghg (227): problems computing
-                               ! cholesky' on the band step; cg has no global
-                               ! overlap Cholesky and is robust to the many
-                               ! random empty bands (nbnd 160 > 136 atomic wfcs)
+  conv_thr           = 1.0e-9    ! plenty for nscf DOS; 1e-10 left the top
+                                 ! empty bands unconverged under cg
+  electron_maxstep   = 300
+  diagonalization    = 'cg'      ! Davidson 'cdiaghg (227): problems computing
+                                 ! cholesky' on the band step; cg has no global
+                                 ! overlap Cholesky and is robust to the many
+                                 ! random empty bands (nbnd 160 > 136 atomic wfcs)
+  diago_cg_maxiter   = 200       ! default 20 -> 'eigenvalues not converged' on
+                                 ! the high empty bands; give cg room
 /
 
 ATOMIC_SPECIES
