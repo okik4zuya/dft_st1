@@ -1,7 +1,9 @@
-&inputepsilon
+&inputpp
   prefix        = 'SnO2_2to1'
   outdir        = './tmp'
   calculation   = 'eps'
+/
+&energy_grid
   smeartype     = 'gauss'
   intersmear    = 0.1
   wmin          = 0.0

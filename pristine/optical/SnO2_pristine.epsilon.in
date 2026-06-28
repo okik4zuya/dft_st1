@@ -1,7 +1,9 @@
-&inputepsilon
+&inputpp
   prefix        = 'SnO2_pristine'
   outdir        = './tmp'
   calculation   = 'eps'
+/
+&energy_grid
   smeartype     = 'gauss'
   intersmear    = 0.1          ! eV — Gaussian broadening; match to experiment
   wmin          = 0.0          ! eV — min photon energy
