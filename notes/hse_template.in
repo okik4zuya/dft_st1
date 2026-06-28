@@ -1,0 +1,81 @@
+! =============================================================================
+! HSE06 single-point SCF — DEFERRED template (NOT wired into run_all.sh)
+! =============================================================================
+! Purpose: anchor the band gap / band-edge positions with a hybrid functional so
+! the PBEsol underestimation cannot be used to attack the band-alignment result.
+! Run as a SINGLE-POINT on an already-relaxed PBEsol+U geometry (no ionic
+! relaxation in HSE — far too expensive). Restart from the converged PBEsol+U
+! charge density / wavefunctions for that cell.
+!
+! Budget note (tight): use the COARSE Fock q-grid below (nqx = 1/2 the k-mesh).
+! Hybrid SCF is ~10-25x a GGA SCF per cell with these settings. Minimum useful
+! cell set: pristine SnO2 + 2:1 (the strongest doping). Add 1:1 and TiO2 only if
+! time allows.
+!
+! HOW TO USE
+!   1. Copy this into e.g. pristine/hse/SnO2_pristine.hse.in
+!   2. Fill prefix/outdir and paste the RELAXED CELL_PARAMETERS + ATOMIC_POSITIONS
+!      from the matching */relax/*.relax.out (or let update_geometry.py inject them).
+!   3. Point outdir at a copy of the converged PBEsol+U tmp/ so it restarts.
+!   4. Run:  mpirun -np <N> pw.x -nk <NK> -in SnO2_pristine.hse.in > ...hse.out
+!   5. Read the gap from the eigenvalues straddling E_F (extract_dft_values.py).
+!
+! To add to run_all.sh later: clone run_unrelaxed() into a run_hse() that points
+! at <sys>/hse/<prefix>.hse.in and add an 'hse' PHASE branch.
+! =============================================================================
+
+&CONTROL
+  calculation   = 'scf'
+  prefix        = 'SnO2_pristine'     ! EDIT per system
+  outdir        = './tmp'             ! restart from converged PBEsol+U tmp/
+  pseudo_dir    = '../../pseudo'
+  tprnfor       = .true.
+  tstress       = .true.
+/
+
+&SYSTEM
+  ibrav         = 0
+  nat           = 24                  ! EDIT per system (24 / 22 / 21)
+  ntyp          = 2
+  ecutwfc       = 60
+  ecutrho       = 480
+  occupations   = 'smearing'
+  smearing      = 'mv'
+  degauss       = 0.01
+  nspin         = 1                   ! EDIT: 2 for doped cells
+
+  ! --- Hybrid functional (HSE06) ------------------------------------------
+  input_dft     = 'hse'
+  ! Coarse Fock q-grid = 1/2 the 4x4x8 k-mesh -> cheapest defensible setting.
+  nqx1          = 2
+  nqx2          = 2
+  nqx3          = 4
+  ! exxdiv_treatment = 'gygi-baldereschi'   ! default; uncomment if needed
+
+  ! NOTE: do NOT also keep the HUBBARD card on for a pure-HSE benchmark unless
+  ! you specifically want HSE+U; for the gap anchor, plain HSE is the cleaner
+  ! comparison. (If kept, document it.)
+/
+
+&ELECTRONS
+  conv_thr         = 1.0e-7
+  mixing_beta      = 0.3
+  electron_maxstep = 200
+  ! adaptively_extrapolate_wfc = .true.   ! can help EXX convergence
+/
+
+ATOMIC_SPECIES
+  Sn  118.710  Sn.pbesol-dn-kjpaw_psl.1.0.0.UPF
+  O   15.999   O.pbesol-n-kjpaw_psl.1.0.0.UPF
+
+! Paste RELAXED geometry here (from */relax/*.relax.out):
+CELL_PARAMETERS angstrom
+  9.474000   0.000000   0.000000
+  0.000000   9.474000   0.000000
+  0.000000   0.000000   3.186000
+
+ATOMIC_POSITIONS angstrom
+  ! ... relaxed Sn/O coordinates ...
+
+K_POINTS automatic
+  4 4 8  0 0 0

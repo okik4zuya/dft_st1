@@ -1,0 +1,24 @@
+[TiO2]
+  Eg_exp = 3.0
+  VBM_DFT = None
+  CBM_DFT = None
+  O1s_DFT = None
+
+[SnO2_pristine]
+  Eg_exp = 3.6
+  VBM_DFT = None
+  CBM_DFT = None
+  O1s_DFT = None
+
+[SnO2_1to1]
+  Eg_exp = 2.41
+  VBM_DFT = None
+  CBM_DFT = None
+  O1s_DFT = None
+
+[SnO2_2to1]
+  Eg_exp = 2.21
+  VBM_DFT = None
+  CBM_DFT = None
+  O1s_DFT = None
+

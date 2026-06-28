@@ -1,0 +1,7 @@
+&BANDS
+  prefix      = 'TiO2_pristine'
+  outdir      = './tmp'
+  filband     = 'TiO2_pristine_bands.dat'
+  lsym        = .true.
+  no_overlap  = .true.
+/

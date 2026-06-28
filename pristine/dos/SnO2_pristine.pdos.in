@@ -1,0 +1,17 @@
+&PROJWFC
+  prefix          = 'SnO2_pristine'
+  outdir          = './tmp'
+  filpdos         = 'SnO2_pristine_pdos'
+  degauss         = 0.005      ! Ry
+  DeltaE          = 0.01       ! eV
+  Emin            = -10.0      ! eV
+  Emax            =  10.0
+  lwrite_overlaps = .false.
+  lbinary_data    = .false.
+/
+
+! Output files will be named:
+! SnO2_pristine_pdos.pdos_atm#N(Sn)_wfc#M(d)
+! SnO2_pristine_pdos.pdos_atm#N(O)_wfc#M(p)
+! Sum all Sn d-channel files for total Sn 4d PDOS
+! Sum all O p-channel files for total O 2p PDOS

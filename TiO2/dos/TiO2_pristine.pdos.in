@@ -1,0 +1,22 @@
+&PROJWFC
+  prefix          = 'TiO2_pristine'
+  outdir          = './tmp'
+  filpdos         = 'TiO2_pristine_pdos'
+  degauss         = 0.005
+  DeltaE          = 0.01
+  Emin            = -10.0
+  Emax            =  10.0
+  lwrite_overlaps = .false.
+  lbinary_data    = .false.
+/
+
+! Expected output files:
+!   TiO2_pristine_pdos.pdos_atm#N(Ti)_wfc#1(s)   <- Ti 4s
+!   TiO2_pristine_pdos.pdos_atm#N(Ti)_wfc#2(p)   <- Ti 3p
+!   TiO2_pristine_pdos.pdos_atm#N(Ti)_wfc#3(d)   <- Ti 3d (Hubbard d) ← KEY
+!   TiO2_pristine_pdos.pdos_atm#N(O)_wfc#1(s)    <- O 2s
+!   TiO2_pristine_pdos.pdos_atm#N(O)_wfc#2(p)    <- O 2p              ← KEY
+!
+! For manuscript Figure 2 (PDOS comparison):
+!   Plot Ti 3d (TiO2) vs Sn 4d/5s (SnO2) on same energy axis
+!   Align VBM of both to 0 eV using core-level correction from band_align.py

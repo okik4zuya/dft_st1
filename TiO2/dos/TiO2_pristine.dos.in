@@ -1,0 +1,9 @@
+&DOS
+  prefix    = 'TiO2_pristine'
+  outdir    = './tmp'
+  fildos    = 'TiO2_pristine_total.dos'
+  degauss   = 0.005
+  DeltaE    = 0.01
+  Emin      = -10.0
+  Emax      =  10.0
+/

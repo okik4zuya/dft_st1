@@ -1,0 +1,9 @@
+&DOS
+  prefix    = 'SnO2_2to1'
+  outdir    = './tmp'
+  fildos    = 'SnO2_2to1_total.dos'
+  degauss   = 0.005
+  DeltaE    = 0.01
+  Emin      = -10.0
+  Emax      =  10.0
+/

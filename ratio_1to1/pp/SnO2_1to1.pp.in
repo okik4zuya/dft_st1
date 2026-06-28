@@ -1,0 +1,42 @@
+! Step 1: Extract charge density of doped system
+&inputpp
+  prefix        = 'SnO2_1to1'
+  outdir        = './tmp'
+  filplot       = 'SnO2_1to1_charge'
+  plot_num      = 0
+/
+
+&plot
+  nfile         = 1
+  filepp(1)     = 'SnO2_1to1_charge'
+  weight(1)     = 1.0
+  iflag         = 3
+  output_format = 6
+  fileout       = 'SnO2_1to1_charge.cube'
+/
+
+! -----------------------------------------------------------------------
+! Step 2: Run pp.x on pristine system (see pristine/pp/SnO2_pristine.pp.in)
+! to get SnO2_pristine_charge.cube
+!
+! Step 3: Compute differential charge density (delta_rho):
+!   delta_rho = rho(1to1_doped) - rho(pristine)
+!
+! In VESTA: File -> Edit Data -> Volumetric Data -> Arithmetic
+!   Set A = SnO2_1to1_charge.cube
+!   Set B = SnO2_pristine_charge.cube (with 2 O atoms removed for alignment)
+!   Formula: A - B
+!
+! In Python (using ase):
+!   from ase.io.cube import read_cube_data
+!   rho_doped, atoms = read_cube_data('SnO2_1to1_charge.cube')
+!   rho_prist, _    = read_cube_data('SnO2_pristine_charge.cube')
+!   delta_rho = rho_doped - rho_prist
+!
+! Isosurface rendering in VESTA:
+!   Yellow: delta_rho > +0.005 e/A^3  (charge accumulation at Sn near Vo)
+!   Cyan:   delta_rho < -0.005 e/A^3  (charge depletion at Vo site)
+! -----------------------------------------------------------------------
+
+! Optional: spin density plot (spin-up minus spin-down)
+! Repeat with plot_num = 6 to get spin density .cube file

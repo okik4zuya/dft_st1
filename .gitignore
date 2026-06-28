@@ -1,0 +1,72 @@
+# ─── Quantum ESPRESSO run artifacts ────────────────────────────
+# SCF/NSCF/relax/bands/dos/optical outputs
+*.out
+*.out.*
+*.log
+*.err
+*.xml
+*.wfc*
+*.hub
+*.mix*
+*.save/
+*.bgrp*
+*.restart*
+JOB*
+
+# Scratch / temporary working directories
+tmp/
+**/tmp/
+*.tmp
+_ph0/
+CRASH
+
+# Charge density / potential cubes & large binaries
+*.cube
+*.dat
+*.chg
+charge-density.*
+data-file*.xml
+
+# Post-processing data products
+*.bands
+*.bands.gnu
+*.bands.dat
+*.rap
+*.proj*
+*.pdos_*
+*.dos
+*.eps_*
+*.epsr*
+*.epsi*
+
+# Generated figures
+*.png
+*.pdf
+*.svg
+postprocess/figures/
+figures/
+
+# ─── Python ────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+.ipynb_checkpoints/
+.venv/
+venv/
+env/
+
+# ─── Pseudopotentials (large; download separately) ─────────────
+pseudo/*.UPF
+
+# ─── Editor / OS cruft ─────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store
+Thumbs.db
+
+# ─── Job scheduler / progress logs ─────────────────────────────
+slurm-*.out
+*.sbatch.log
+progress.md

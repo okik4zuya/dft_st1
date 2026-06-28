@@ -1,0 +1,21 @@
+! Charge density of pristine TiO2
+! Used as reference for band alignment and VESTA visualisation
+&inputpp
+  prefix        = 'TiO2_pristine'
+  outdir        = './tmp'
+  filplot       = 'TiO2_pristine_charge'
+  plot_num      = 0            ! 0 = charge density
+/
+
+&plot
+  nfile         = 1
+  filepp(1)     = 'TiO2_pristine_charge'
+  weight(1)     = 1.0
+  iflag         = 3
+  output_format = 6            ! cube file for VESTA
+  fileout       = 'TiO2_pristine_charge.cube'
+/
+
+! Note: TiO2 charge density cube is used for visual comparison with SnO2-x
+! There is no delta_rho for TiO2 itself (no dopant/vacancy)
+! Open in VESTA alongside SnO2-x cubes to compare electron distribution

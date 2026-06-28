@@ -1,0 +1,17 @@
+&PROJWFC
+  prefix          = 'SnO2_2to1'
+  outdir          = './tmp'
+  filpdos         = 'SnO2_2to1_pdos'
+  degauss         = 0.005
+  DeltaE          = 0.01
+  Emin            = -10.0
+  Emax            =  10.0
+  lwrite_overlaps = .false.
+  lbinary_data    = .false.
+/
+
+! KEY DIFFERENCE from 1:1 sample:
+! With 3 Vo, expect BROADER Sn 5s/4d peaks in the gap region
+! The broadening of this defect band (vs discrete peaks in 1:1)
+! is the primary DFT evidence for the smaller band gap (2.21 vs 2.41 eV)
+! Plot PDOS of 1:1 and 2:1 on the same panel for direct comparison

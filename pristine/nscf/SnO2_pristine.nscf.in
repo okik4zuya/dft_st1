@@ -1,0 +1,70 @@
+﻿&CONTROL
+  calculation   = 'nscf'
+  prefix        = 'SnO2_pristine'
+  outdir        = './tmp'
+  pseudo_dir    = '../../pseudo'
+/
+
+&SYSTEM
+  ibrav         = 0
+  nat           = 24
+  ntyp          = 2
+  ecutwfc       = 60
+  ecutrho       = 480
+  nbnd          = 160          ! ~2.5x occupied bands; pristine has ~64 occ bands
+  occupations   = 'tetrahedra_opt'
+  nspin         = 1
+/
+
+&ELECTRONS
+  conv_thr         = 1.0e-10   ! tighter for NSCF
+  electron_maxstep = 300
+  diagonalization  = 'cg'      ! Davidson 'cdiaghg (227): problems computing
+                               ! cholesky' on the band step; cg has no global
+                               ! overlap Cholesky and is robust to the many
+                               ! random empty bands (nbnd 160 > 136 atomic wfcs)
+/
+
+ATOMIC_SPECIES
+  Sn  118.710  Sn.pbesol-dn-kjpaw_psl.1.0.0.UPF
+  O   15.999   O.pbesol-n-kjpaw_psl.1.0.0.UPF
+
+! Use relaxed coordinates from vc-relax
+CELL_PARAMETERS angstrom
+  9.474000   0.000000   0.000000
+  0.000000   9.474000   0.000000
+  0.000000   0.000000   3.186000
+
+ATOMIC_POSITIONS angstrom
+  Sn   0.000000   0.000000   0.000000
+  Sn   2.368500   2.368500   1.593000
+  Sn   4.737000   0.000000   0.000000
+  Sn   7.105500   2.368500   1.593000
+  Sn   0.000000   4.737000   0.000000
+  Sn   2.368500   7.105500   1.593000
+  Sn   4.737000   4.737000   0.000000
+  Sn   7.105500   7.105500   1.593000
+  O    1.454259   1.454259   0.000000
+  O    7.919741   7.919741   0.000000
+  O    0.914241   3.282759   1.593000
+  O    3.282759   0.914241   1.593000
+  O    6.191259   1.454259   0.000000
+  O    3.822741   3.822741   0.000000
+  O    5.651241   0.914241   1.593000
+  O    8.019759   3.282759   1.593000
+  O    1.454259   6.191259   0.000000
+  O    3.822741   8.559741   0.000000
+  O    0.914241   7.651241   1.593000
+  O    3.282759   5.282759   1.593000
+  O    6.191259   6.191259   0.000000
+  O    8.559741   8.559741   0.000000
+  O    5.651241   5.651241   1.593000
+  O    8.019759   8.019759   1.593000
+
+! 2x denser than SCF k-mesh for smooth DOS
+K_POINTS automatic
+  8 8 12  0 0 0
+
+HUBBARD (ortho-atomic)
+  U Sn-4d 4.0
+  U O-2p  0.0

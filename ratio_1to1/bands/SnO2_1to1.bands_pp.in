@@ -1,0 +1,8 @@
+&BANDS
+  prefix      = 'SnO2_1to1'
+  outdir      = './tmp'
+  filband     = 'SnO2_1to1_bands.dat'
+  lsym        = .true.
+  no_overlap  = .true.
+  spin_component = 1           ! 1=spin-up, 2=spin-down; run twice for both
+/

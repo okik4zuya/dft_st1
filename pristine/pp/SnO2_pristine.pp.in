@@ -1,0 +1,20 @@
+&inputpp
+  prefix        = 'SnO2_pristine'
+  outdir        = './tmp'
+  filplot       = 'SnO2_pristine_charge'
+  plot_num      = 0            ! 0 = charge density
+/
+
+&plot
+  nfile         = 1
+  filepp(1)     = 'SnO2_pristine_charge'
+  weight(1)     = 1.0
+  iflag         = 3            ! 3 = 3D plot
+  output_format = 6            ! 6 = cube file (for VESTA)
+  fileout       = 'SnO2_pristine_charge.cube'
+/
+
+! The .cube file can be opened in VESTA for 3D visualisation
+! For differential charge density (delta_rho):
+!   delta_rho = rho(doped) - rho(pristine) - rho(isolated_dopant/vacancy)
+!   Subtract cube files using the provided Python script or VESTA arithmetic

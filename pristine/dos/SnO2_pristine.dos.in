@@ -1,0 +1,9 @@
+&DOS
+  prefix    = 'SnO2_pristine'
+  outdir    = './tmp'
+  fildos    = 'SnO2_pristine_total.dos'
+  degauss   = 0.005            ! Ry — Gaussian broadening for DOS
+  DeltaE    = 0.01             ! eV — energy resolution
+  Emin      = -10.0            ! eV relative to Fermi level
+  Emax      =  10.0
+/

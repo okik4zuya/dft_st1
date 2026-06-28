@@ -1,0 +1,70 @@
+﻿&CONTROL
+  calculation   = 'scf'
+  prefix        = 'TiO2_pristine'
+  outdir        = './tmp'
+  pseudo_dir    = '../../pseudo'
+  tprnfor       = .true.
+  tstress       = .true.
+/
+
+&SYSTEM
+  ibrav         = 0
+  nat           = 24
+  ntyp          = 2
+  ecutwfc       = 60
+  ecutrho       = 480
+  occupations   = 'smearing'
+  smearing      = 'mv'
+  degauss       = 0.01
+  nspin         = 1
+/
+
+&ELECTRONS
+  conv_thr         = 1.0e-8
+  mixing_beta      = 0.4
+  mixing_mode      = 'plain'
+  electron_maxstep = 200
+/
+
+ATOMIC_SPECIES
+  Ti  47.867  Ti.pbesol-spn-kjpaw_psl.1.0.0.UPF
+  O   15.999  O.pbesol-n-kjpaw_psl.1.0.0.UPF
+
+! IMPORTANT: Replace with relaxed coordinates from vc-relax output
+CELL_PARAMETERS angstrom
+  9.188000   0.000000   0.000000
+  0.000000   9.188000   0.000000
+  0.000000   0.000000   2.959000
+
+ATOMIC_POSITIONS angstrom
+  Ti   0.000000   0.000000   0.000000
+  Ti   2.297000   2.297000   1.479500
+  Ti   4.594000   0.000000   0.000000
+  Ti   6.891000   2.297000   1.479500
+  Ti   0.000000   4.594000   0.000000
+  Ti   2.297000   6.891000   1.479500
+  Ti   4.594000   4.594000   0.000000
+  Ti   6.891000   6.891000   1.479500
+  O    1.406000   1.406000   0.000000
+  O    3.188000   3.188000   0.000000
+  O    3.703000   0.891000   1.479500
+  O    0.891000   3.703000   1.479500
+  O    6.000000   1.406000   0.000000
+  O    7.782000   3.188000   0.000000
+  O    8.297000   0.891000   1.479500
+  O    5.485000   3.703000   1.479500
+  O    1.406000   6.000000   0.000000
+  O    3.188000   7.782000   0.000000
+  O    3.703000   5.485000   1.479500
+  O    0.891000   8.297000   1.479500
+  O    6.000000   6.000000   0.000000
+  O    7.782000   7.782000   0.000000
+  O    8.297000   5.485000   1.479500
+  O    5.485000   8.297000   1.479500
+
+K_POINTS automatic
+  4 4 8  0 0 0
+
+HUBBARD (ortho-atomic)
+  U Ti-3d 4.2
+  U O-2p  0.0

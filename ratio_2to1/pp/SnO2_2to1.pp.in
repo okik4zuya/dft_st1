@@ -1,0 +1,32 @@
+! Step 1: Extract charge density of 2:1 doped system
+&inputpp
+  prefix        = 'SnO2_2to1'
+  outdir        = './tmp'
+  filplot       = 'SnO2_2to1_charge'
+  plot_num      = 0
+/
+
+&plot
+  nfile         = 1
+  filepp(1)     = 'SnO2_2to1_charge'
+  weight(1)     = 1.0
+  iflag         = 3
+  output_format = 6
+  fileout       = 'SnO2_2to1_charge.cube'
+/
+
+! -----------------------------------------------------------------------
+! Differential charge density: delta_rho = rho(2to1) - rho(pristine)
+!
+! KEY FEATURE to look for in 2:1 vs 1:1 comparison:
+!   - More charge accumulation centres (3 Vo vs 2 Vo)
+!   - Potentially OVERLAPPING charge clouds if Vo are close
+!   - Greater total electron redistribution
+!   - This overlap = electron delocalisation = better conductivity
+!
+! Isosurface: use same isovalue as 1:1 for direct visual comparison
+!   Positive: +0.005 e/A^3 (yellow) = electron accumulation at Sn^2+
+!   Negative: -0.005 e/A^3 (cyan)   = electron depletion at Vo site
+!
+! Optional: spin density (plot_num = 6) to show magnetic moment at Vo
+! -----------------------------------------------------------------------

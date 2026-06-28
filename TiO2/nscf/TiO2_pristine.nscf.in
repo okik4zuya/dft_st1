@@ -1,0 +1,67 @@
+﻿&CONTROL
+  calculation   = 'nscf'
+  prefix        = 'TiO2_pristine'
+  outdir        = './tmp'
+  pseudo_dir    = '../../pseudo'
+/
+
+&SYSTEM
+  ibrav         = 0
+  nat           = 24
+  ntyp          = 2
+  ecutwfc       = 60
+  ecutrho       = 480
+  nbnd          = 160          ! ~2.5x occupied bands (TiO2 has ~64 occ bands)
+  occupations   = 'tetrahedra_opt'
+  nspin         = 1
+/
+
+&ELECTRONS
+  conv_thr         = 1.0e-10
+  electron_maxstep = 300
+  diagonalization  = 'cg'      ! avoid Davidson 'cdiaghg (227): problems
+                               ! computing cholesky' on the band step
+/
+
+ATOMIC_SPECIES
+  Ti  47.867  Ti.pbesol-spn-kjpaw_psl.1.0.0.UPF
+  O   15.999  O.pbesol-n-kjpaw_psl.1.0.0.UPF
+
+! Use relaxed coordinates from vc-relax
+CELL_PARAMETERS angstrom
+  9.188000   0.000000   0.000000
+  0.000000   9.188000   0.000000
+  0.000000   0.000000   2.959000
+
+ATOMIC_POSITIONS angstrom
+  Ti   0.000000   0.000000   0.000000
+  Ti   2.297000   2.297000   1.479500
+  Ti   4.594000   0.000000   0.000000
+  Ti   6.891000   2.297000   1.479500
+  Ti   0.000000   4.594000   0.000000
+  Ti   2.297000   6.891000   1.479500
+  Ti   4.594000   4.594000   0.000000
+  Ti   6.891000   6.891000   1.479500
+  O    1.406000   1.406000   0.000000
+  O    7.782000   7.782000   0.000000
+  O    0.891000   3.188000   1.479500
+  O    3.188000   0.891000   1.479500
+  O    5.985000   1.406000   0.000000
+  O    3.703000   3.703000   0.000000
+  O    5.485000   0.891000   1.479500
+  O    7.782000   3.188000   1.479500
+  O    1.406000   5.985000   0.000000
+  O    3.703000   8.282000   0.000000
+  O    0.891000   7.485000   1.479500
+  O    3.188000   5.188000   1.479500
+  O    5.985000   5.985000   0.000000
+  O    8.282000   8.282000   0.000000
+  O    5.485000   5.485000   1.479500
+  O    7.782000   7.782000   1.479500
+
+K_POINTS automatic
+  8 8 12  0 0 0
+
+HUBBARD (ortho-atomic)
+  U Ti-3d 4.2
+  U O-2p  0.0
