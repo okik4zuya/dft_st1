@@ -247,14 +247,10 @@ done
 
 # =============================================================================
 if [ "$MODE" = "check" ]; then
-    # Quick global "can we launch MPI as root at all" probe (fast, ~2s).
-    info "[CHECK] probing 'mpirun --allow-run-as-root ... pw.x --version' ..."
-    if mpirun --allow-run-as-root -np 2 pw.x --version >/dev/null 2>&1; then
-        info "[CHECK] MPI-as-root launch OK"
-    else
-        err "[CHECK] mpirun could not launch pw.x as root — fix MPI/PATH before proceeding."; CHECK_FAIL=1
-    fi
-
+    # NOTE: no standalone 'pw.x --version' probe — QE's pw.x has no reliable
+    # early-exit flag, so an unrecognized arg makes it block reading stdin.
+    # The per-system smoke_scf below launches pw.x with '-in <file>' (never
+    # stdin), backgrounded with a timeout+kill, and validates MPI-as-root there.
     for entry in "${SYSTEMS[@]}"; do
         SYS="${entry%%:*}"; PREFIX="${entry##*:}"
         info "--------------------------------------------------------"
