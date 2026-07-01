@@ -222,7 +222,7 @@ post_optical() {
     cd "$d" || { err "[${SYS}/optical] cannot cd $d"; FAIL_STEPS+=("${SYS}/optical"); cd "$ROOT_DIR"; return 1; }
     if ! "$PYTHON" "$NC_GEN" --in "../scf/${P}.scf.in"  --out "${P}.opt_scf.in" \
             --pseudo-dir "$NC_PSEUDO_DIR" --map "$NC_MAP" --ecutwfc "$NC_ECUTWFC" --ecutrho "$NC_ECUTRHO" \
-       || ! "$PYTHON" "$NC_GEN" --in "../nscf/${P}.nscf.in" --out "${P}.opt_nscf.in" \
+       || ! "$PYTHON" "$NC_GEN" --in "../nscf/${P}.nscf.in" --out "${P}.opt_nscf.in" --force-nosym \
             --pseudo-dir "$NC_PSEUDO_DIR" --map "$NC_MAP" --ecutwfc "$NC_ECUTWFC" --ecutrho "$NC_ECUTRHO"; then
         err "[${SYS}/optical] NC input generation failed"; FAIL_STEPS+=("${SYS}/optical"); cd "$ROOT_DIR"; return 1
     fi

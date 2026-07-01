@@ -19,8 +19,9 @@
 &ELECTRONS
   conv_thr           = 1.0e-9
   electron_maxstep   = 300
-  diagonalization    = 'cg'
-  diago_cg_maxiter   = 200
+  diagonalization    = 'david'   ! TEST: is Davidson stable now?
+  diago_david_ndim   = 2         ! smaller subspace -> avoids cdiaghg cholesky singularity
+  diago_full_acc     = .true.    ! converge empty bands too (they trigger the cholesky fail)
 /
 
 ATOMIC_SPECIES
@@ -60,7 +61,7 @@ ATOMIC_POSITIONS angstrom
   O      5.686219948    8.603252173    1.608896641
 
 K_POINTS automatic
-  8 8 12  0 0 0
+  4 4 8  0 0 0
 
 HUBBARD (ortho-atomic)
   U Sn-4d 4.0

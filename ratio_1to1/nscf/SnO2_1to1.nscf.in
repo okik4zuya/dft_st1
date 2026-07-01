@@ -13,7 +13,6 @@
   ecutrho       = 480
   nbnd          = 180          ! spin-up + spin-down; include all Vo states + conduction
   occupations   = 'tetrahedra_opt'
-  nosym         = .true.         ! required for epsilon.x: full BZ k-point set
   nspin         = 2
   tot_charge       = 0.0
 /

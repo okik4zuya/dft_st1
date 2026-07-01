@@ -13,7 +13,6 @@
   ecutrho       = 480
   nbnd          = 200          ! more bands needed: 3 Vo create denser sub-gap states
   occupations   = 'tetrahedra_opt'
-  nosym         = .true.         ! required for epsilon.x: full BZ k-point set
   nspin         = 2
   tot_charge       = 0.0
 /

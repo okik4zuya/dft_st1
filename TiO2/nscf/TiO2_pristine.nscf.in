@@ -13,7 +13,6 @@
   ecutrho       = 480
   nbnd          = 160          ! ~2.5x occupied bands (TiO2 has ~64 occ bands)
   occupations   = 'tetrahedra_opt'
-  nosym         = .true.         ! required for epsilon.x: full BZ k-point set
   nspin         = 1
 /
 

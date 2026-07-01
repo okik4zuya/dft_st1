@@ -46,12 +46,21 @@ def parse_map(s):
 _CARD = re.compile(r"^\s*[A-Z_]+(\s+.*)?$")
 
 
-def transform(text, pseudo_dir, elmap, ecutwfc, ecutrho):
+def transform(text, pseudo_dir, elmap, ecutwfc, ecutrho, force_nosym=False):
     out = []
     in_species = False
     seen = set()
     for line in text.splitlines():
         stripped = line.strip()
+
+        # --- force nosym: drop any inherited nosym line, re-inject after &system
+        # (epsilon.x needs the full-BZ mesh even when the source nscf omits nosym)
+        if force_nosym and re.match(r"^\s*nosym\s*=", line, re.IGNORECASE):
+            continue
+        if force_nosym and re.match(r"^\s*&system\b", line, re.IGNORECASE):
+            out.append(line)
+            out.append("  nosym         = .true.         ! forced: epsilon.x needs full BZ")
+            continue
 
         # --- pseudo_dir ---
         m = re.match(r"^(\s*pseudo_dir\s*=\s*)'[^']*'(.*)$", line, re.IGNORECASE)
@@ -113,12 +122,16 @@ def main():
     ap.add_argument("--map", required=True, help="El=file.upf,El2=file2.upf")
     ap.add_argument("--ecutwfc", type=str, default=None)
     ap.add_argument("--ecutrho", type=str, default=None)
+    ap.add_argument("--force-nosym", action="store_true",
+                    help="ensure nosym=.true. in the output (for the optical NSCF, "
+                         "whose source nscf.in no longer carries it)")
     args = ap.parse_args()
 
     elmap = parse_map(args.map)
     with open(args.inp, "r", encoding="utf-8") as f:
         text = f.read()
-    new = transform(text, args.pseudo_dir, elmap, args.ecutwfc, args.ecutrho)
+    new = transform(text, args.pseudo_dir, elmap, args.ecutwfc, args.ecutrho,
+                    force_nosym=args.force_nosym)
     with open(args.out, "w", encoding="utf-8") as f:
         f.write(new)
     print(f"[make_nc_optical] wrote {args.out} (NC pseudos: {elmap})")
