@@ -72,6 +72,23 @@ if [ "${AVAIL_MB:-0}" -gt 0 ]; then
     fi
 fi
 
+# 2b) Rank grain: trim the rank count to a multiple of RANK_GRAIN.
+#     A raw core/RAM-derived total can be an ugly number (e.g. 245 = 5*7*7)
+#     whose only divisors {1,5,7,35,49} never divide a k-point mesh, so npool
+#     CANNOT load-balance no matter how it is chosen.  Trimming to a multiple of
+#     16 costs <RANK_GRAIN cores but makes the total share factors {2,4,8,16}
+#     with the meshes used here (3x3x6 ~16 irr-k, 4x4x8 ~35).  Portable: a
+#     64/96/128-core node is already a multiple of 16 and is left untouched.
+#     Skip for small nodes (< 2*grain) where every core matters.
+RANK_GRAIN=${RANK_GRAIN:-16}
+if (( MPI_NPROC >= 2 * RANK_GRAIN )); then
+    _grained=$(( MPI_NPROC - MPI_NPROC % RANK_GRAIN ))
+    if (( _grained != MPI_NPROC )); then
+        info "Rank grain: trimming ${MPI_NPROC} -> ${_grained} (multiple of ${RANK_GRAIN}) for clean k-pool division."
+        MPI_NPROC=$_grained
+    fi
+fi
+
 # 3) MPI launcher, with --allow-run-as-root only under OpenMPI + root
 SERIAL=0
 if command -v mpirun >/dev/null 2>&1; then
@@ -94,8 +111,16 @@ largest_divisor_leq() {   # echo largest d with d|n and 1<=d<=cap
     for (( d=cap; d>=1; d-- )); do (( n % d == 0 )) && { echo "$d"; return; }; done
     echo 1
 }
-NK_PW=${NK_PW:-$(largest_divisor_leq "$MPI_NPROC" $(( MPI_NPROC / 8 )) )}
-NK_BANDS=${NK_BANDS:-$(largest_divisor_leq "$MPI_NPROC" $(( MPI_NPROC / 16 )) )}
+# npool must also be BOUNDED BY THE K-POINT COUNT: more pools than k-points just
+# leaves pools idle.  The old cap nproc/8 grows with node size, so on a big node
+# it over-pools (e.g. 245/8=30 pools for a 16-k-point job).  Bound it by
+# NPOOL_MAX, sized to this study's meshes (relax ~16 irr-k, prod ~35); raise it
+# via env for denser meshes, or pin npool directly with NK_PW / NK_BANDS.
+NPOOL_MAX=${NPOOL_MAX:-16}
+_pw_cap=$(( MPI_NPROC / 8 ));  (( _pw_cap > NPOOL_MAX )) && _pw_cap=$NPOOL_MAX
+_bd_cap=$(( MPI_NPROC / 16 )); (( _bd_cap > NPOOL_MAX )) && _bd_cap=$NPOOL_MAX
+NK_PW=${NK_PW:-$(largest_divisor_leq "$MPI_NPROC" "$_pw_cap")}
+NK_BANDS=${NK_BANDS:-$(largest_divisor_leq "$MPI_NPROC" "$_bd_cap")}
 
 # Post-processing rank cap: dos.x/projwfc.x/epsilon.x/pp.x call read_file_new_
 # using slab decomp BEFORE -pd .true. takes effect.  If MPI ranks > smooth-grid
