@@ -75,6 +75,15 @@ warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
 err()  { echo -e "${RED}[ERROR]${NC} $1"; }
 
 if [ "$MODE" = "run" ]; then
+    # Single-instance lock: two concurrent real runs share tmp/.save/.out and
+    # corrupt each other (and oversubscribe the node with 2x240 ranks). Refuse.
+    LOCK="${ROOT_DIR}/.run_post.lock"
+    if [ -f "$LOCK" ] && kill -0 "$(cat "$LOCK" 2>/dev/null)" 2>/dev/null; then
+        err "run_post.sh 'run' already active (PID $(cat "$LOCK")). Not starting a second instance."
+        exit 1
+    fi
+    echo "$$" > "$LOCK"
+    trap 'rm -f "$LOCK"' EXIT
     LOGFILE="${ROOT_DIR}/post_$(date '+%Y%m%d_%H%M%S').log"
     exec > >(tee -a "${LOGFILE}") 2>&1
     info "Master log: ${LOGFILE}"
