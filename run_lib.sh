@@ -72,6 +72,18 @@ if [ "${AVAIL_MB:-0}" -gt 0 ]; then
     fi
 fi
 
+# 2a) Rank ceiling: guard against FFT over-decomposition on very large nodes.
+#     These 24-atom cells have only ~36-45 FFT z-planes; pw.x slab FFT fails once
+#     ranks-per-pool exceeds the plane count.  Default 256 is generous — it never
+#     trims the 245-core box this study runs on (245 < 256) but protects 512+
+#     core nodes.  Lower it toward the 64-128 sweet spot ([[reference-qe-parallel-scaling]])
+#     to free cores for running systems concurrently.
+MAX_RANKS=${MAX_RANKS:-256}
+if (( MPI_NPROC > MAX_RANKS )); then
+    info "Rank ceiling: capping ${MPI_NPROC} -> ${MAX_RANKS} (MAX_RANKS; guards small-cell FFT)."
+    MPI_NPROC=$MAX_RANKS
+fi
+
 # 2b) Rank grain: trim the rank count to a multiple of RANK_GRAIN.
 #     A raw core/RAM-derived total can be an ugly number (e.g. 245 = 5*7*7)
 #     whose only divisors {1,5,7,35,49} never divide a k-point mesh, so npool
@@ -111,12 +123,16 @@ largest_divisor_leq() {   # echo largest d with d|n and 1<=d<=cap
     for (( d=cap; d>=1; d-- )); do (( n % d == 0 )) && { echo "$d"; return; }; done
     echo 1
 }
-# npool must also be BOUNDED BY THE K-POINT COUNT: more pools than k-points just
-# leaves pools idle.  The old cap nproc/8 grows with node size, so on a big node
-# it over-pools (e.g. 245/8=30 pools for a 16-k-point job).  Bound it by
-# NPOOL_MAX, sized to this study's meshes (relax ~16 irr-k, prod ~35); raise it
-# via env for denser meshes, or pin npool directly with NK_PW / NK_BANDS.
-NPOOL_MAX=${NPOOL_MAX:-16}
+# npool must ALSO be <= the number of IRREDUCIBLE k-points, or pw.x aborts with
+# "npool must be <= nk".  High-symmetry cells have FEW: pristine TiO2/SnO2 are
+# 2x2x1 rutile (tetragonal 4/mmm) whose 3x3x6 relax mesh reduces to only ~10-12
+# irr-k (cf. 35 for the 4x4x8 prod mesh), vs 16 for the vacancy-broken SnO2
+# supercells.  The old cap (nproc/8) grows with node size and blows past that
+# floor on any decent node (e.g. 30 pools on 245 cores) -> abort.  NPOOL_MAX=8
+# stays under the ~10 irr-k floor on EVERY system here while still parallelising
+# k-points well and keeping ranks/pool (<=MAX_RANKS/8=32) under the FFT-plane
+# count.  Raise it only if all systems use denser meshes, or pin NK_PW/NK_BANDS.
+NPOOL_MAX=${NPOOL_MAX:-8}
 _pw_cap=$(( MPI_NPROC / 8 ));  (( _pw_cap > NPOOL_MAX )) && _pw_cap=$NPOOL_MAX
 _bd_cap=$(( MPI_NPROC / 16 )); (( _bd_cap > NPOOL_MAX )) && _bd_cap=$NPOOL_MAX
 NK_PW=${NK_PW:-$(largest_divisor_leq "$MPI_NPROC" "$_pw_cap")}
