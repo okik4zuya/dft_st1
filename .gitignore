@@ -54,6 +54,7 @@ __pycache__/
 .venv/
 venv/
 env/
+ppvenv/
 
 # ─── Pseudopotentials (large; download separately) ─────────────
 #pseudo/*.UPF

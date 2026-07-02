@@ -20,6 +20,13 @@
 #   nohup bash run_post.sh run >/dev/null 2>&1 &
 #   tail -f post_*.log
 #
+# Stage gate (stop early):
+#   STOP_AFTER=<stage> selects the LAST stage to run. Valid, in order:
+#     scf  nscf  bands  dos  optical  pp        (default: pp = full pipeline)
+#   'dos' runs BOTH dos.x and projwfc.x (pdos); 'pdos' is accepted as an alias.
+#   e.g. run through pdos only (figs 1/2/5), skip optical+pp:
+#     STOP_AFTER=pdos nohup bash run_post.sh run >/dev/null 2>&1 &
+#
 # Notes:
 #   - PREREQUISITE: each system's vc-relax must be done AND its relaxed geometry
 #     injected into scf/nscf/bands inputs BEFORE running post. This does not relax.
@@ -67,6 +74,18 @@ case "$MODE" in
     check|run) ;;
     *) echo "Usage: bash run_post.sh [check|run]"; exit 2 ;;
 esac
+
+# --- Stage gate: STOP_AFTER selects the last stage to run --------------------
+STAGES=(scf nscf bands dos optical pp)
+STOP_AFTER="${STOP_AFTER:-pp}"
+[ "$STOP_AFTER" = "pdos" ] && STOP_AFTER="dos"   # pdos lives inside the 'dos' stage
+STOP_IDX=-1
+for _i in "${!STAGES[@]}"; do [ "${STAGES[$_i]}" = "$STOP_AFTER" ] && STOP_IDX=$_i; done
+if [ "$STOP_IDX" -lt 0 ]; then
+    echo "Invalid STOP_AFTER='$STOP_AFTER'. Valid: ${STAGES[*]} (or pdos alias for dos)"; exit 2
+fi
+# convenience predicate: should stage <name> run?
+run_stage() { local s=$1 i; for i in "${!STAGES[@]}"; do [ "${STAGES[$i]}" = "$s" ] && { [ "$i" -le "$STOP_IDX" ]; return; }; done; return 1; }
 
 # --- Logging -----------------------------------------------------------------
 GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; NC='\033[0m'
@@ -243,6 +262,7 @@ post_pp() {
 info "========================================================"
 info "  run_post.sh  |  MODE=${MODE}  |  $(date '+%F %T')"
 info "  pw.x ranks: ${MPI##*-np } | post ranks: ${MPI_POST##*-np } | npool: ${NK}"
+info "  stop after: ${STOP_AFTER}  (stages: ${STAGES[*]:0:$((STOP_IDX+1))})"
 info "========================================================"
 
 for tool in mpirun pw.x dos.x projwfc.x bands.x epsilon.x pp.x; do
@@ -266,7 +286,7 @@ if [ "$MODE" = "check" ]; then
         info "  CHECK system: ${SYS}  (prefix ${PREFIX})"
         info "--------------------------------------------------------"
         check_inputs  "$SYS" "$PREFIX"
-        check_optical "$SYS" "$PREFIX"
+        run_stage optical && check_optical "$SYS" "$PREFIX"   # only if optical is in scope
         smoke_scf     "$SYS" "$PREFIX"   # LIVE: launch real SCF, confirm it runs, kill it
     done
 
@@ -296,11 +316,11 @@ for entry in "${SYSTEMS[@]}"; do
     if ! post_scf "$SYS" "$PREFIX"; then
         err "[${SYS}] SCF failed — skipping remaining steps for this system."; continue
     fi
-    post_nscf    "$SYS" "$PREFIX"
-    post_bands   "$SYS" "$PREFIX"
-    post_dos     "$SYS" "$PREFIX"
-    post_optical "$SYS" "$PREFIX"
-    post_pp      "$SYS" "$PREFIX"
+    run_stage nscf    && post_nscf    "$SYS" "$PREFIX"
+    run_stage bands   && post_bands   "$SYS" "$PREFIX"
+    run_stage dos     && post_dos     "$SYS" "$PREFIX"
+    run_stage optical && post_optical "$SYS" "$PREFIX"
+    run_stage pp      && post_pp      "$SYS" "$PREFIX"
 done
 
 echo ""

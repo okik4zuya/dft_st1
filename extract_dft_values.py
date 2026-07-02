@@ -16,6 +16,7 @@ Outputs:
 import os
 import re
 import glob
+import json
 import numpy as np
 
 # =============================================================================
@@ -282,6 +283,12 @@ def extract_all():
                 f.write(f"  {k} = {v}\n")
             f.write("\n")
     print(f"\nSummary saved to: {summary_path}")
+
+    # Machine-readable JSON consumed by band_alignment.py (no manual copy-paste).
+    json_path = os.path.join(BASE_DIR, 'dft_values.json')
+    with open(json_path, 'w') as f:
+        json.dump(extracted, f, indent=2)
+    print(f"Machine-readable values: {json_path}")
 
     return extracted
 

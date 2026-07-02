@@ -17,7 +17,7 @@ IMPORTANT: Fill in the ALIGNED_VBM values below after running
            band_alignment.py → read from its printed output.
 """
 
-import sys, os
+import sys, os, json
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
@@ -29,16 +29,29 @@ from plot_config import (apply_style, COLORS, LABELS, EG_EXP,
 
 apply_style()
 
-# ── FILL IN AFTER band_alignment.py ─────────────────────────────────────────
-# VBM positions on the aligned absolute scale (eV, TiO₂ VBM = 0 reference)
-# These come from band_alignment.py printed output
-
+# ── Aligned VBM positions (eV, TiO₂ VBM = 0 reference) ───────────────────────
+# Auto-loaded from ../band_alignment.json (written by band_alignment.py). The
+# JSON stores ABSOLUTE VBM_aligned; here we rescale so TiO₂ VBM = 0. If the
+# JSON is absent, ALIGNED_VBM stays all-zero and DEMO values are used below.
 ALIGNED_VBM = {
     'TiO2'          :  0.00,   # reference
-    'SnO2_pristine' :  0.00,   # FILL IN → e.g. +0.25 or −0.40
-    'SnO2_1to1'     :  0.00,   # FILL IN
-    'SnO2_2to1'     :  0.00,   # FILL IN
+    'SnO2_pristine' :  0.00,
+    'SnO2_1to1'     :  0.00,
+    'SnO2_2to1'     :  0.00,
 }
+_ALIGN_JSON = os.path.join(os.path.dirname(__file__), '..', 'band_alignment.json')
+if os.path.exists(_ALIGN_JSON):
+    with open(_ALIGN_JSON) as _f:
+        _al = json.load(_f)
+    if 'TiO2' in _al and _al['TiO2'].get('VBM_aligned') is not None:
+        _ref = _al['TiO2']['VBM_aligned']
+        for _s in ALIGNED_VBM:
+            if _s in _al and _al[_s].get('VBM_aligned') is not None:
+                ALIGNED_VBM[_s] = _al[_s]['VBM_aligned'] - _ref
+        print(f"  Loaded aligned VBM from {os.path.basename(_ALIGN_JSON)}: "
+              + ", ".join(f"{k}={v:+.3f}" for k, v in ALIGNED_VBM.items()))
+else:
+    print("  NOTE: band_alignment.json not found — using DEMO band alignment.")
 
 # Computed CBM = VBM + Eg_exp
 def get_cbm(sys_key):

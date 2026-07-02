@@ -53,13 +53,17 @@ def transform(text, pseudo_dir, elmap, ecutwfc, ecutrho, force_nosym=False):
     for line in text.splitlines():
         stripped = line.strip()
 
-        # --- force nosym: drop any inherited nosym line, re-inject after &system
-        # (epsilon.x needs the full-BZ mesh even when the source nscf omits nosym)
-        if force_nosym and re.match(r"^\s*nosym\s*=", line, re.IGNORECASE):
+        # --- force nosym+noinv: drop any inherited nosym/noinv line, re-inject
+        # after &system. epsilon.x's grid_build needs the COMPLETE uniform BZ
+        # mesh: nosym stops spatial-symmetry folding, but pw.x still folds
+        # k <-> -k via time-reversal unless noinv is also set -> that leftover
+        # folding is exactly the "non uniform kpt grid" abort in grid_build.
+        if force_nosym and re.match(r"^\s*(nosym|noinv)\s*=", line, re.IGNORECASE):
             continue
         if force_nosym and re.match(r"^\s*&system\b", line, re.IGNORECASE):
             out.append(line)
             out.append("  nosym         = .true.         ! forced: epsilon.x needs full BZ")
+            out.append("  noinv         = .true.         ! forced: no time-reversal k<->-k folding")
             continue
 
         # --- pseudo_dir ---

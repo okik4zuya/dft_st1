@@ -20,7 +20,7 @@ Layout (single-column, stacked):
 Output: fig2_pdos_comparison.png / .pdf
 """
 
-import sys, os, glob
+import sys, os, glob, json
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
@@ -35,15 +35,27 @@ apply_style()
 BASE = os.path.join(os.path.dirname(__file__), '..')
 
 # ── Core-level shift values ─────────────────────────────────────────────────
-# Fill in after running band_alignment.py
+# Auto-loaded from ../band_alignment.json (written by band_alignment.py).
 # These align each system's energy axis to the same absolute scale
-# (TiO2 VBM = 0 reference)
+# (O 1s core-level alignment). If the JSON is absent, all shifts default to 0
+# (each panel is then plotted relative to its own Fermi level).
 CORE_SHIFT = {
-    'TiO2'          : 0.000,   # reference — no shift
-    'SnO2_pristine' : 0.000,   # FILL IN from band_alignment.py output
-    'SnO2_1to1'     : 0.000,   # FILL IN
-    'SnO2_2to1'     : 0.000,   # FILL IN
+    'TiO2'          : 0.000,
+    'SnO2_pristine' : 0.000,
+    'SnO2_1to1'     : 0.000,
+    'SnO2_2to1'     : 0.000,
 }
+_ALIGN_JSON = os.path.join(BASE, 'band_alignment.json')
+if os.path.exists(_ALIGN_JSON):
+    with open(_ALIGN_JSON) as _f:
+        _al = json.load(_f)
+    for _s in CORE_SHIFT:
+        if _s in _al and _al[_s].get('delta_core') is not None:
+            CORE_SHIFT[_s] = _al[_s]['delta_core']
+    print(f"  Loaded core-level shifts from {os.path.basename(_ALIGN_JSON)}: "
+          + ", ".join(f"{k}={v:+.3f}" for k, v in CORE_SHIFT.items()))
+else:
+    print("  NOTE: band_alignment.json not found — CORE_SHIFT=0 (Fermi-referenced).")
 
 SYSTEMS = {
     'TiO2': {

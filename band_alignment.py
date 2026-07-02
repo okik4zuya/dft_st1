@@ -27,7 +27,11 @@ Inputs required (fill in after running DFT):
 """
 
 import sys
+import os
+import json
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')            # headless compute node / batch wrapper: never open a window
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from matplotlib.patches import FancyArrowPatch
@@ -106,15 +110,36 @@ data = {
 REFERENCE = 'TiO2'
 
 # =============================================================================
-# SECTION 2: DEMO VALUES (remove after filling in real DFT data above)
-# These are physically plausible placeholder values for testing the script
+# SECTION 2: DATA SOURCE — dft_values.json (preferred) or DEMO fallback
 # =============================================================================
-DEMO_MODE = True   # Set to False when using real DFT values
+# Preferred path: extract_dft_values.py writes dft_values.json; we load real
+# VBM_DFT / CBM_DFT / O1s_DFT / Eg_exp from it automatically (no manual paste).
+# If that file is absent, fall back to DEMO placeholder values so the script
+# still runs and the plot renders (clearly marked as demo).
+DEMO_MODE = True   # auto-set to False below if dft_values.json is loaded
+
+_JSON_IN = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'dft_values.json')
+if os.path.exists(_JSON_IN):
+    with open(_JSON_IN) as _f:
+        _ext = json.load(_f)
+    loaded = []
+    for _sys in data:
+        if _sys in _ext:
+            for _k in ('VBM_DFT', 'CBM_DFT', 'O1s_DFT', 'Eg_exp'):
+                if _ext[_sys].get(_k) is not None:
+                    data[_sys][_k] = _ext[_sys][_k]
+            loaded.append(_sys)
+    if loaded:
+        DEMO_MODE = False
+        print("=" * 60)
+        print(f"  Loaded real DFT values from {os.path.basename(_JSON_IN)}")
+        print(f"  Systems: {', '.join(loaded)}")
+        print("=" * 60)
 
 if DEMO_MODE:
     print("=" * 60)
     print("  RUNNING IN DEMO MODE — placeholder values only")
-    print("  Replace with real DFT values from your SCF outputs")
+    print("  (dft_values.json not found — run extract_dft_values.py first)")
     print("=" * 60)
     data['TiO2'].update({
         'VBM_DFT': -0.05, 'CBM_DFT': 2.10, 'O1s_DFT': -17.40})
@@ -130,14 +155,24 @@ if DEMO_MODE:
 # =============================================================================
 
 def check_inputs(data):
-    """Verify all required values are filled in."""
+    """Verify all required values are filled in.
+
+    VBM_DFT + O1s_DFT + Eg_exp are the alignment essentials (fig 5 / fig 2).
+    CBM_DFT is OPTIONAL: the near-metallic doped SnO2-x cells print no
+    'lowest unoccupied' level, so CBM_DFT is often None. It is only used for
+    the DFT gap / scissor shift (optical branch), so a missing CBM_DFT is a
+    warning, not a fatal error.
+    """
     for system, vals in data.items():
-        for key in ['VBM_DFT', 'CBM_DFT', 'O1s_DFT']:
+        for key in ['VBM_DFT', 'O1s_DFT']:
             if vals[key] is None:
                 raise ValueError(
                     f"Missing value: data['{system}']['{key}']\n"
                     f"Run DFT and fill in the value before proceeding."
                 )
+        if vals.get('CBM_DFT') is None:
+            print(f"  NOTE: {system} has no CBM_DFT (near-metallic) — scissor "
+                  f"shift unavailable; alignment uses Eg_exp for CBM.")
         # Eg_exp now drives every CBM position (see core_level_alignment): the
         # mechanism (Type-II / Z / S-scheme) depends on it, so a missing value
         # is fatal, not cosmetic.
@@ -175,8 +210,13 @@ def core_level_alignment(data, reference):
         # would push every CBM down and can FLIP the mechanism (Type-II vs Z/S).
         # Only the VBM offset (VBM_aligned) is the DFT-derived quantity here.
         CBM_aligned = VBM_aligned + vals['Eg_exp']
-        Eg_DFT      = vals['CBM_DFT'] - vals['VBM_DFT']
-        scissor     = vals['Eg_exp'] - Eg_DFT
+        # Eg_DFT / scissor need CBM_DFT, which is absent for near-metallic cells.
+        if vals.get('CBM_DFT') is not None:
+            Eg_DFT  = vals['CBM_DFT'] - vals['VBM_DFT']
+            scissor = vals['Eg_exp'] - Eg_DFT
+        else:
+            Eg_DFT  = None
+            scissor = None
 
         results[system] = {
             'label'       : vals['label'],
@@ -194,9 +234,11 @@ def core_level_alignment(data, reference):
         print(f"  Core shift (Δ) : {delta:+.4f} eV")
         print(f"  VBM (aligned)  : {VBM_aligned:.4f} eV")
         print(f"  CBM (aligned)  : {CBM_aligned:.4f} eV")
-        print(f"  Eg_DFT (PBE+U) : {Eg_DFT:.4f} eV")
+        print(f"  Eg_DFT (PBE+U) : {Eg_DFT:.4f} eV" if Eg_DFT is not None
+              else "  Eg_DFT (PBE+U) : n/a (no CBM_DFT — near-metallic)")
         print(f"  Eg_exp (K-M)   : {vals['Eg_exp']:.4f} eV")
-        print(f"  Scissor shift  : {scissor:+.4f} eV  ← use in epsilon.in")
+        print(f"  Scissor shift  : {scissor:+.4f} eV  ← use in epsilon.in" if scissor is not None
+              else "  Scissor shift  : n/a (needs CBM_DFT)")
         print()
 
     return results
@@ -368,15 +410,39 @@ def print_scissor_table(results):
         'SnO2_2to1'      : 'ratio_2to1/optical/SnO2_2to1.epsilon.in',
     }
     for sys, res in results.items():
-        print(f"  {sys:<18} {res['Eg_DFT']:>9.3f} {res['Eg_exp']:>9.3f} "
-              f"  {res['scissor']:>+8.3f} eV")
+        if res['scissor'] is None:
+            print(f"  {sys:<18} {'n/a':>9} {res['Eg_exp']:>9.3f} "
+                  f"  {'n/a (no CBM_DFT)':>12}")
+        else:
+            print(f"  {sys:<18} {res['Eg_DFT']:>9.3f} {res['Eg_exp']:>9.3f} "
+                  f"  {res['scissor']:>+8.3f} eV")
     print()
     print("Action: open each epsilon.in and set  shift = <value above>")
     print()
     for sys, path in mapping.items():
+        sc = results[sys]['scissor']
         print(f"  {path}")
-        print(f"    shift = {results[sys]['scissor']:+.4f}")
+        print(f"    shift = {sc:+.4f}" if sc is not None else "    shift = n/a (near-metallic, no CBM_DFT)")
     print()
+
+
+def write_alignment_json(results, path='band_alignment.json'):
+    """Emit machine-readable alignment consumed by fig2 (core shift) and
+    fig5 (aligned VBM/CBM). Absolute VBM_aligned/CBM_aligned; figs rescale to
+    the TiO2 = 0 reference themselves."""
+    out = {}
+    for sys, res in results.items():
+        out[sys] = {
+            'VBM_aligned' : res['VBM_aligned'],
+            'CBM_aligned' : res['CBM_aligned'],
+            'delta_core'  : res['delta_core'],
+            'scissor'     : res['scissor'],
+            'Eg_exp'      : res['Eg_exp'],
+            'Eg_DFT'      : res['Eg_DFT'],
+        }
+    with open(path, 'w') as f:
+        json.dump(out, f, indent=2)
+    print(f"Alignment written to: {path}  (consumed by fig2 + fig5)")
 
 # =============================================================================
 # MAIN
@@ -387,4 +453,5 @@ if __name__ == '__main__':
     results = core_level_alignment(data, reference=REFERENCE)
     identify_mechanism(results)
     print_scissor_table(results)
+    write_alignment_json(results, path='band_alignment.json')
     plot_energy_diagram(results, save_path='energy_diagram.png')
