@@ -19,8 +19,9 @@
 &ELECTRONS
   conv_thr           = 1.0e-9
   electron_maxstep   = 300
-  diagonalization    = 'cg'
-  diago_cg_maxiter   = 200
+  diagonalization    = 'david'   ! Davidson (verified stable, ~28x faster than cg)
+  diago_david_ndim   = 2         ! small subspace avoids cdiaghg cholesky singularity
+  diago_full_acc     = .true.    ! converge empty bands (they caused the cholesky fail)
 /
 
 ATOMIC_SPECIES

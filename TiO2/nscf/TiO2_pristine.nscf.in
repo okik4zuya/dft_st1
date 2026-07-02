@@ -19,9 +19,9 @@
 &ELECTRONS
   conv_thr           = 1.0e-9    ! plenty for nscf DOS; 1e-10 left top bands unconv.
   electron_maxstep   = 300
-  diagonalization    = 'cg'      ! avoid Davidson 'cdiaghg (227): problems
-                                 ! computing cholesky' on the band step
-  diago_cg_maxiter   = 200       ! default 20 -> 'eigenvalues not converged'
+  diagonalization    = 'david'   ! Davidson (verified stable, ~28x faster than cg)
+  diago_david_ndim   = 2         ! small subspace avoids cdiaghg cholesky singularity
+  diago_full_acc     = .true.    ! converge empty bands (they caused the cholesky fail)
 /
 
 ATOMIC_SPECIES
